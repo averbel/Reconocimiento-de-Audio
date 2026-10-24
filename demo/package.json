@@ -1,0 +1,25 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --test test/",
+    "start": "node server.js",
+    "canciones": "node scripts/generar_canciones.js",
+    "experimentos": "node scripts/experimentos.js",
+    "build": "node scripts/sincronizar.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "express": "^5.3.0",
+    "three": "^0.186.1"
+  }
+}

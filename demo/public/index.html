@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reconocimiento de audio con la Transformada de Fourier</title>
+  <link rel="icon" href="/favicon.ico" sizes="32x32">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <meta name="theme-color" content="#1f4fd8">
+  <script>
+    // Aplica el tema antes de pintar para evitar parpadeos
+    (function () {
+      var t = null;
+      try { t = localStorage.getItem('tema'); } catch (e) { /* sin almacenamiento */ }
+      if (!t) t = window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'oscuro' : 'claro';
+      document.documentElement.dataset.tema = t;
+    })();
+  </script>
+  <link rel="stylesheet" href="styles.css">
+  <script type="importmap">{ "imports": { "three": "/vendor/three/three.module.js" } }</script>
+</head>
+<body>
+  <header class="cabecera">
+    <div class="marca">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path d="M2 16h3l3-9 4 18 4-14 3 8 3-5 2 2h6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div>
+        <h1>Reconocimiento de audio con la Transformada de Fourier</h1>
+        <p>FFT → espectrograma → picos → hashes → votación por desplazamiento</p>
+      </div>
+    </div>
+    <button id="tema" class="icono" type="button" aria-label="Cambiar entre tema claro y oscuro" title="Tema claro / oscuro">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path id="tema-ico" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" fill="currentColor"/></svg>
+    </button>
+  </header>
+
+  <nav class="pasos" aria-label="Etapas del algoritmo">
+    <ol id="pasos">
+      <li><button type="button" data-paso="1"><span class="n">1</span><span class="t">Señal</span><span class="m" id="m1">8 kHz</span></button></li>
+      <li><button type="button" data-paso="2"><span class="n">2</span><span class="t">FFT</span><span class="m" id="m2">ventana Hann</span></button></li>
+      <li><button type="button" data-paso="3"><span class="n">3</span><span class="t">Picos</span><span class="m" id="m3">máximos locales</span></button></li>
+      <li><button type="button" data-paso="4"><span class="n">4</span><span class="t">Hashes</span><span class="m" id="m4">pares de picos</span></button></li>
+      <li><button type="button" data-paso="5"><span class="n">5</span><span class="t">Votación</span><span class="m" id="m5">índice invertido</span></button></li>
+    </ol>
+    <p id="explica" class="explica" aria-live="polite"></p>
+  </nav>
+
+  <main>
+    <aside>
+      <section class="tarjeta">
+        <h2>Fuente de audio</h2>
+        <div class="pestanas" role="tablist" aria-label="Fuente de audio">
+          <button type="button" role="tab" class="activa" data-modo="base">Fragmento</button>
+          <button type="button" role="tab" data-modo="archivo">Archivo</button>
+          <button type="button" role="tab" data-modo="mic">Micrófono</button>
+        </div>
+
+        <div id="modo-base">
+          <label>Canción de la base
+            <select id="cancion"></select>
+          </label>
+          <label><span>Inicio del fragmento <b id="v-inicio">8 s</b></span>
+            <input id="inicio" type="range" min="0" max="25" step="0.5" value="8">
+          </label>
+          <label><span>Duración <b id="v-dur">5 s</b></span>
+            <input id="dur" type="range" min="2" max="10" step="0.5" value="5">
+          </label>
+          <label><span>Ruido blanco (SNR) <b id="v-snr">0 dB</b></span>
+            <input id="snr" type="range" min="-10" max="30" step="1" value="0">
+          </label>
+          <label class="check"><input id="sinruido" type="checkbox"> Sin ruido</label>
+          <div class="acciones">
+            <button id="reconocer-base" type="button" class="primario">Reconocer</button>
+          </div>
+          <div class="acciones">
+            <button id="oir-frag" type="button" class="secundario ancho">▶ Escuchar fragmento</button>
+            <button id="oir-completa" type="button" class="secundario ancho">▶ Canción completa</button>
+          </div>
+          <p class="ayuda">Puedes escuchar antes de reconocer. El fragmento incluye el ruido elegido; la canción completa va limpia.</p>
+        </div>
+
+        <div id="modo-archivo" hidden>
+          <p class="ayuda">Sube un audio (WAV, MP3, OGG…). Se convierte a 8 kHz en el navegador. Solo se reconocen las canciones de la base.</p>
+          <input id="archivo" type="file" accept="audio/*">
+          <div class="acciones"><button id="reconocer-archivo" type="button" class="primario">Reconocer</button></div>
+        </div>
+
+        <div id="modo-mic" hidden>
+          <p class="ayuda">Reproduce una canción de la base por los parlantes y graba unos segundos. Requiere permiso de micrófono.</p>
+          <label><span>Duración de la grabación <b id="v-grab">6 s</b></span>
+            <input id="grab" type="range" min="3" max="12" step="1" value="6">
+          </label>
+          <div class="acciones"><button id="reconocer-mic" type="button" class="primario">Grabar y reconocer</button></div>
+        </div>
+        <p id="estado" class="estado" role="status" aria-live="polite"></p>
+      </section>
+
+      <section id="resultado" class="tarjeta" hidden>
+        <h2>Resultado</h2>
+        <p id="veredicto" class="veredicto"></p>
+        <div class="medidor" aria-hidden="true">
+          <div class="barra"><div id="barra-puntaje"></div><div id="marca-umbral"></div></div>
+          <div class="leyenda"><span id="lg-puntaje"></span><span id="lg-umbral"></span></div>
+        </div>
+        <p id="detalle" class="ayuda"></p>
+        <table>
+          <caption>Candidatas</caption>
+          <thead><tr><th>Canción</th><th>Puntaje</th><th>Posición</th></tr></thead>
+          <tbody id="candidatas"></tbody>
+        </table>
+      </section>
+    </aside>
+
+    <div id="der">
+      <section class="tarjeta">
+        <div class="barra-visor">
+          <h2>Espectrograma</h2>
+          <div class="pestanas pequenas" role="tablist" aria-label="Tipo de vista">
+            <button type="button" role="tab" class="activa" data-vista="3d">3D</button>
+            <button type="button" role="tab" data-vista="2d">2D</button>
+          </div>
+          <label class="check"><input id="ver-picos" type="checkbox" checked> Picos</label>
+          <label class="check"><input id="ver-pares" type="checkbox"> Pares de hash</label>
+          <button id="oir" type="button" class="secundario" disabled>▶ Escuchar</button>
+        </div>
+
+        <div class="controles3d" id="controles3d">
+          <div class="grupo" role="group" aria-label="Punto de vista">
+            <button type="button" class="chip activa" data-cam="perspectiva">Perspectiva</button>
+            <button type="button" class="chip" data-cam="superior">Superior</button>
+            <button type="button" class="chip" data-cam="lateral">Lateral</button>
+            <button type="button" class="chip" data-cam="frontal">Frontal</button>
+          </div>
+          <label class="inline">Altura <input id="altura" type="range" min="0.3" max="2.2" step="0.05" value="1"></label>
+          <label class="check"><input id="giro" type="checkbox"> Girar</label>
+        </div>
+
+        <div class="visor" id="visor">
+          <div id="lienzo3d" class="lienzo3d"></div>
+          <canvas id="cv-espectro" width="600" height="256" hidden></canvas>
+          <div id="vacio" class="vacio">
+            <svg viewBox="0 0 64 40" aria-hidden="true"><path d="M2 30l10-8 8 4 10-16 10 10 8-8 14 12" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            <p>Elige una fuente de audio y pulsa <b>Reconocer</b> para ver su espectrograma.</p>
+          </div>
+          <div id="escala" class="escala" hidden aria-hidden="true">
+            <span>0 dB</span><i></i><span>−70 dB</span>
+            <em>potencia relativa al máximo (altura y color)</em>
+          </div>
+          <div id="tip" class="tip" hidden></div>
+          <div id="aviso3d" class="aviso" hidden></div>
+        </div>
+        <p id="info-espectro" class="ayuda"></p>
+        <p class="ayuda" id="ayuda-3d">Arrastra para girar · rueda para acercar · clic derecho para desplazar · pasa el cursor sobre la superficie para leer tiempo, frecuencia y potencia.</p>
+        <ul class="leyenda-viz">
+          <li><i class="pt"></i> Picos de la constelación</li>
+          <li><i class="ln"></i> Pares ancla → objetivo (hashes)</li>
+          <li><i class="ph"></i> Cabezal de reproducción</li>
+        </ul>
+      </section>
+
+      <div class="doble">
+        <section class="tarjeta">
+          <h2>Forma de onda</h2>
+          <canvas id="cv-onda" width="600" height="110"></canvas>
+        </section>
+        <section class="tarjeta">
+          <h2>Histograma de desplazamientos</h2>
+          <canvas id="cv-hist" width="600" height="110"></canvas>
+        </section>
+      </div>
+      <p class="ayuda nota-hist">Cada coincidencia de hash vota por <i>t</i><sub>bd</sub> − <i>t</i><sub>consulta</sub>. Una canción verdadera concentra los votos en un solo valor (barra amarilla).</p>
+    </div>
+  </main>
+
+  <script src="/lib/colores.js"></script>
+  <script src="/lib/huella.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

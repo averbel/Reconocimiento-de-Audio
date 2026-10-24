@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Modelos matemáticos del reconocimiento de audio</title>
+<link rel="stylesheet" href="node_modules/katex/dist/katex.min.css">
+<style>
+  @page { size: 8.5in 11in; margin: 0.8in 0.85in 0.8in 0.85in; }
+  html { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.32; color: #111; }
+  body { margin: 0; counter-reset: sec; }
+  header.portada { border-bottom: 2px solid #1f3a8a; padding-bottom: 10pt; margin-bottom: 14pt; }
+  header.portada h1 { font-size: 22pt; line-height: 1.15; margin: 0 0 4pt; color: #1f3a8a; font-weight: 600; }
+  header.portada p { margin: 2pt 0; font-size: 10.5pt; color: #333; }
+  header.portada .autor { font-size: 11.5pt; color: #111; }
+  h2 { font-size: 13.5pt; color: #1f3a8a; margin: 18pt 0 5pt; counter-increment: sec; counter-reset: sub; break-after: avoid; border-bottom: 1px solid #c8d2ee; padding-bottom: 2pt; }
+  h2::before { content: counter(sec) ".  "; }
+  h2.nonum { counter-increment: none; } h2.nonum::before { content: ""; }
+  h3 { font-size: 11pt; margin: 10pt 0 3pt; break-after: avoid; font-style: italic; font-weight: normal; }
+  p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
+  .eq { display: flex; align-items: center; margin: 5pt 0; break-inside: avoid; }
+  .eqc { flex: 1; text-align: center; overflow: hidden; }
+  .eqn { flex: none; width: 0.45in; text-align: right; }
+  .eq .katex-display { margin: 0; }
+  .katex { font-size: 1.05em; }
+  .caja { border-left: 3px solid #1f3a8a; background: #f3f6fd; padding: 5pt 9pt; margin: 6pt 0 8pt; font-size: 10pt; break-inside: avoid; }
+  .caja b { color: #1f3a8a; }
+  .donde { font-size: 9.5pt; color: #444; margin: 3pt 0 8pt; }
+  .donde code { font-size: 9pt; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #eef1f7; padding: 0 2pt; border-radius: 2pt; }
+  table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6pt 0 10pt; break-inside: avoid; }
+  th, td { padding: 3pt 6pt; text-align: right; border-bottom: 0.5pt solid #bbb; }
+  th { border-top: 1pt solid #111; border-bottom: 1pt solid #111; font-weight: 600; background: #f3f6fd; }
+  td:first-child, th:first-child { text-align: left; }
+  table.txt td, table.txt th { text-align: left; vertical-align: top; }
+  caption { caption-side: top; text-align: left; font-weight: 600; font-size: 10pt; margin-bottom: 3pt; }
+  ul { margin: 0 0 6pt 0; padding-left: 0.25in; }
+  li { margin-bottom: 2pt; }
+  .indice { column-count: 2; column-gap: 0.3in; font-size: 10pt; margin: 0 0 8pt; }
+  .indice div { break-inside: avoid; margin-bottom: 1pt; }
+  .salto { break-before: page; }
+</style>
+</head>
+<body>
+
+<header class="portada">
+  <h1>Modelos matemáticos del reconocimiento de audio</h1>
+  <p class="autor"><b>Andrés Felipe Verbel Pacheco</b> — Desarrollo Web Full Stack, CUC</p>
+  <p>Documento de referencia: todas las fórmulas que usa la demo, con los valores reales de sus parámetros y el lugar del código donde se implementan.</p>
+</header>
+
+<div class="indice">
+  <div>1. Muestreo y representación digital</div>
+  <div>2. Transformada discreta de Fourier (DFT)</div>
+  <div>3. Transformada rápida de Fourier (FFT)</div>
+  <div>4. Ventana de Hann</div>
+  <div>5. Transformada de tiempo corto y espectrograma</div>
+  <div>6. Detección de picos (constelación)</div>
+  <div>7. Pares de picos y hash de 24 bits</div>
+  <div>8. Índice invertido y votación</div>
+  <div>9. Ruido y relación señal-ruido</div>
+  <div>10. Colisiones de hash</div>
+  <div>11. Síntesis de las canciones de prueba</div>
+  <div>12. Visualización 2D y 3D</div>
+  <div>13. Métricas de evaluación</div>
+  <div>14. Tabla de parámetros y mapa del código</div>
+</div>
+
+<h2>Muestreo y representación digital</h2>
+<p>El audio continuo $x_a(t)$ se convierte en una secuencia de muestras tomadas cada $1/f_s$ segundos. Para que cada frecuencia quede representada sin ambigüedad (sin «aliasing») solo pueden existir componentes por debajo de la frecuencia de Nyquist:</p>
+[[eq:muestreo]]x[n]=x_a\!\left(\tfrac{n}{f_s}\right),\qquad f_{\mathrm{Nyq}}=\tfrac{f_s}{2}={{nyq}}\ \text{Hz}\quad(f_s={{fs}}\ \text{Hz}).[[/eq]]
+<p>Cualquier audio que entra a la demo (archivo, micrófono) se remuestrea a $f_s={{fs}}$ Hz con el remuestreador del navegador (<code>OfflineAudioContext</code>), y los canales estéreo se mezclan a mono. Las canciones de la base se guardan como WAV PCM de 16 bits; la conversión entre entero $s$ y amplitud real es:</p>
+[[eq:pcm]]x=\frac{s}{32767},\qquad s=\operatorname{round}(32767\,x),\quad s\in[-32768,\,32767].[[/eq]]
+<p class="donde">Código: <code>lib/sintesis.js</code> → <code>escribirWav</code>, <code>leerWav</code>; <code>public/app.js</code> → <code>a8k</code>, <code>decodificar</code>.</p>
+
+<h2>Transformada discreta de Fourier (DFT)</h2>
+<p>Para un bloque de $N$ muestras, la DFT descompone la señal en $N$ componentes sinusoidales complejas; $|X[k]|$ es su amplitud y $\arg X[k]$ su fase:</p>
+[[eq:dft]]X[k]=\sum_{n=0}^{N-1}x[n]\,e^{-j2\pi kn/N},\qquad k=0,1,\dots,N-1.[[/eq]]
+<p>El índice $k$ (bin) corresponde a una frecuencia concreta, y la separación entre bins es la <b>resolución en frecuencia</b>:</p>
+[[eq:bin]]f_k=\frac{k\,f_s}{N},\qquad \Delta f=\frac{f_s}{N}={{df}}\ \text{Hz},\qquad k(f)=\frac{fN}{f_s}.[[/eq]]
+<p>Ejemplo: la nota La4 (440 Hz) cae en $k={{kA}}$, entre los bins 56 y 57. Como la señal de audio es real, el espectro es simétrico, así que solo hacen falta los primeros $N/2$ bins, y se cumple la conservación de energía (teorema de Parseval):</p>
+[[eq:parseval]]X[N-k]=\overline{X[k]},\qquad \sum_{n=0}^{N-1}|x[n]|^{2}=\frac{1}{N}\sum_{k=0}^{N-1}|X[k]|^{2}.[[/eq]]
+<p>Calculada directamente, la DFT necesita $N^2$ multiplicaciones complejas ({{dft_ops}} para $N={{N}}$).</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>dft</code> (referencia para validar la FFT). Verificación: pruebas «FFT coincide con la DFT» y «Parseval» en <code>test/huella.test.js</code>.</p>
+
+<h2>Transformada rápida de Fourier (FFT)</h2>
+<p>El algoritmo de Cooley–Tukey calcula exactamente la misma DFT con menos operaciones. Separa las muestras pares e impares: si $E[k]$ y $O[k]$ son las DFT de tamaño $N/2$ de cada grupo y $W_N=e^{-j2\pi/N}$ (factor de giro), entonces</p>
+[[eq:fft]]\begin{aligned}X[k]&=E[k]+W_N^{k}\,O[k],\\ X[k+\tfrac N2]&=E[k]-W_N^{k}\,O[k],\end{aligned}\qquad 0\le k<\tfrac N2.[[/eq]]
+<p>Cada par de ecuaciones es una «mariposa». Aplicado de forma recursiva (con $N$ potencia de 2), el costo cumple $T(N)=2T(N/2)+\Theta(N)$, es decir:</p>
+[[eq:costo]]\begin{aligned}T_{\mathrm{FFT}}(N)&=\Theta(N\log_2 N),\\ \tfrac{N}{2}\log_2 N&={{mariposas}}\ \text{mariposas para }N={{N}},\qquad \tfrac{N^2}{(N/2)\log_2 N}\approx {{teorica}}.\end{aligned}[[/eq]]
+<p>La implementación es iterativa y en el lugar: primero reordena las muestras con la permutación de inversión de bits y luego ejecuta $\log_2 N$ etapas de mariposas, con los factores $W_N^k$ precalculados una sola vez. La relación teórica de operaciones es ≈ {{teorica}}; la aceleración medida en la práctica fue de {{medida_1024}}× para $N=1024$ (Tabla 1).</p>
+<table>
+<caption>Tabla 1. Tiempo medido de una transformada de N puntos (Node.js, entrada compleja aleatoria)</caption>
+{{tabla_fft}}
+</table>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>plan</code>, <code>fft</code>. Mediciones: <code>demo/scripts/experimentos.js</code> → <code>fftVsDft</code>.</p>
+
+<h2>Ventana de Hann</h2>
+<p>Una señal real se analiza en bloques finitos. Cortar la señal de golpe equivale a multiplicarla por una ventana rectangular y «mancha» la energía de cada nota hacia bins vecinos (fuga espectral). Para atenuar esos bordes cada bloque se multiplica por la ventana de Hann:</p>
+[[eq:hann]]w[n]=\frac{1}{2}-\frac{1}{2}\cos\!\left(\frac{2\pi n}{N}\right),\qquad 0\le n<N.[[/eq]]
+<p>Vale 0 en los extremos y 1 en el centro ($n=N/2$). Propiedades conocidas de esta ventana: el lóbulo principal ocupa ±2 bins, el primer lóbulo lateral está ≈ 31 dB por debajo y su ancho de banda equivalente de ruido es 1,5 bins. Esas son las que hacen que dos notas próximas se vean como crestas separadas en el espectrograma.</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>hann</code> (verificada en las pruebas: <i>w</i>[0]=0 y <i>w</i>[N/2]=1).</p>
+
+<h2>Transformada de tiempo corto y espectrograma</h2>
+<p>La música cambia en el tiempo, por lo que se aplica la FFT a bloques que se van desplazando. Con ventana $w$, tamaño $N$ y salto $H$ (en muestras), la transformada de tiempo corto de la trama $m$ es</p>
+[[eq:stft]]X[m,k]=\sum_{n=0}^{N-1}w[n]\,x[mH+n]\,e^{-j2\pi kn/N},\qquad M=\left\lfloor\frac{L-N}{H}\right\rfloor+1,[[/eq]]
+<p>donde $L$ es la longitud de la señal y $M$ el número de tramas. El espectrograma es la potencia en decibelios (se suma $10^{-12}$ para evitar $\log 0$ en el silencio digital):</p>
+[[eq:db]]S[m,k]=10\log_{10}\!\left(|X[m,k]|^{2}+10^{-12}\right)\ \text{dB},\qquad t_m=\frac{mH}{f_s}\ \text{s}.[[/eq]]
+<p>Con $N={{N}}$ y $H={{hop}}$ muestras a $f_s={{fs}}$ Hz: cada ventana dura <b>{{ventana_ms}} ms</b>, hay una trama nueva cada <b>{{hop_ms}} ms</b> ({{tramas_s}} tramas por segundo, solape del 75 %) y la resolución es {{df}} Hz por bin. Solo se usan los primeros 256 bins (0–{{kmax_hz}} Hz), donde está la información musical útil. Existe un compromiso inevitable: una ventana más larga mejora $\Delta f$ pero empeora la resolución temporal.</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>espectrograma</code>.</p>
+
+<h2>Detección de picos (constelación)</h2>
+<p>La huella no guarda todo el espectrograma, solo sus máximos locales: son los puntos más fuertes y, por eso, los que mejor resisten el ruido. Un punto $(m,k)$ es un pico si cumple a la vez tres condiciones:</p>
+[[eq:pico]]\begin{aligned}&S[m,k]=\max_{\substack{|m'-m|\le\Delta_t\\|k'-k|\le\Delta_f}}S[m',k'],\\ &S[m,k]>S_{\max}-\gamma,\\ &k\ge k_{\min},\end{aligned}[[/eq]]
+<p>con $\Delta_t={{vect}}$ tramas, $\Delta_f={{vecf}}$ bins, margen $\gamma={{marg}}$ dB respecto del máximo global $S_{\max}$ y $k_{\min}={{kmin}}$ (se ignoran las frecuencias menores que {{kmin_hz}} Hz). El máximo en una vecindad rectangular se calcula de forma <b>separable</b> (primero a lo largo de frecuencia y luego del tiempo), lo que reduce el costo de $O(TK\,\Delta_t\Delta_f)$ a $O(TK(\Delta_t+\Delta_f))$:</p>
+[[eq:separable]]\begin{aligned}M_1[m,k]&=\max_{|k'-k|\le\Delta_f}S[m,k'],\\ M_2[m,k]&=\max_{|m'-m|\le\Delta_t}M_1[m',k],\\ (m,k)\ \text{es pico}&\iff S[m,k]=M_2[m,k].\end{aligned}[[/eq]]
+<p>El criterio de máximo local reparte los picos por todo el plano tiempo-frecuencia y es insensible a la ganancia global, porque compara decibelios entre sí. El margen $\gamma$ descarta lo que queda bajo el ruido.</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>picos</code>.</p>
+
+<h2>Pares de picos y hash de 24 bits</h2>
+<p>Un pico aislado es poco selectivo (solo 9 bits de frecuencia). Por eso cada pico <i>ancla</i> $(m_1,k_1)$ se empareja con los siguientes $F={{fan}}$ picos <i>objetivo</i> $(m_2,k_2)$ situados hasta ${{dtmax}}$ tramas después, y cada par produce un hash con ambas frecuencias y su separación temporal:</p>
+[[eq:hash]]h=\bigl(k_1\cdot 512+k_2\bigr)\cdot 64+\Delta m,\qquad \Delta m=m_2-m_1\in[1,\,{{dtmax}}],\qquad h\in[0,\,2^{24}).[[/eq]]
+<p>Reparto de bits: $k_1$ (9 bits) + $k_2$ (9 bits) + $\Delta m$ (6 bits) = 24 bits, es decir, {{espacio}} valores posibles. La clave del método es que $h$ depende de $\Delta m$ y no del instante absoluto del par, así que el mismo trozo de canción produce los mismos hashes aunque el fragmento empiece en cualquier punto. Con $P$ picos se generan como máximo $F\cdot P$ hashes.</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>hashes</code>, <code>huella</code>.</p>
+
+<h2>Índice invertido y votación</h2>
+<p>Al registrar una canción, cada hash $h$ se guarda con el identificador de la canción $s$ y su instante $m_{\mathrm{bd}}$, empaquetados en un solo entero (tiempo hasta $2^{21}$ tramas):</p>
+[[eq:entrada]]e=s\cdot 2^{21}+m_{\mathrm{bd}},\quad s=\left\lfloor\tfrac{e}{2^{21}}\right\rfloor,\quad m_{\mathrm{bd}}=e\bmod 2^{21}.[[/eq]]
+<p>El índice es un mapa $h\mapsto\{e\}$, de modo que buscar un hash cuesta $O(1)$. En la consulta, cada hash $(h,m_{\mathrm q})$ recupera todas las entradas con el mismo $h$ y vota por el desplazamiento entre el instante de la base de datos y el de la consulta:</p>
+[[eq:delta]]\delta=m_{\mathrm{bd}}-m_{\mathrm q}.[[/eq]]
+<p>Si el fragmento pertenece a la canción $s$, muchos pares coinciden con el <i>mismo</i> $\delta$ (la posición del fragmento dentro de la canción), mientras que las coincidencias por azar se reparten entre desplazamientos distintos. Sea $c_s(\delta)$ el número de votos de $s$ con desplazamiento $\delta$. El puntaje de una canción, la decisión y la posición estimada son:</p>
+[[eq:puntaje]]\begin{aligned}\mathrm{puntaje}_s&=\max_{\delta}\,\bigl[c_s(\delta-1)+c_s(\delta)+c_s(\delta+1)\bigr],\\ \hat s&=\arg\max_s\ \mathrm{puntaje}_s,\qquad \hat t=\frac{\hat\delta\,H}{f_s}\ \text{s}.\end{aligned}[[/eq]]
+<p>Se suman tres desplazamientos consecutivos porque el fragmento empieza en una muestra arbitraria y los instantes se cuantizan en pasos de {{hop_ms}} ms, lo que desplaza algunos picos una trama. La canción $\hat s$ se acepta solo si $\mathrm{puntaje}_{\hat s}\ge\tau$, con umbral <b>$\tau={{umbral}}$ votos</b>; si no, la respuesta es «sin coincidencia fiable». La posición $\hat t$ puede ser ambigua si la pieza repite frases.</p>
+<p class="donde">Código: <code>lib/huella.js</code> → <code>Indice.agregar</code>, <code>votar</code>, <code>puntajes</code>, <code>buscar</code>; <code>server.js</code> → <code>POST /api/reconocer</code>.</p>
+
+<h2>Ruido y relación señal-ruido</h2>
+<p>Para evaluar la robustez se le suma al fragmento ruido blanco gaussiano. La relación señal-ruido (SNR) compara la potencia de la señal $P_x$ con la varianza del ruido $\sigma^2$:</p>
+[[eq:snr]]\begin{aligned}P_x&=\frac{1}{L}\sum_{i=0}^{L-1}x[i]^2,\qquad \mathrm{SNR_{dB}}=10\log_{10}\frac{P_x}{\sigma^2},\\ \sigma^2&=\frac{P_x}{10^{\mathrm{SNR_{dB}}/10}},\qquad y[i]=x[i]+\sigma z_i.\end{aligned}[[/eq]]
+<p>Las variables gaussianas $z_i\sim\mathcal N(0,1)$ se generan con la transformada de Box–Muller a partir de dos números uniformes $u_1,u_2\in(0,1)$:</p>
+[[eq:boxmuller]]z_1=\sqrt{-2\ln u_1}\,\cos(2\pi u_2),\qquad z_2=\sqrt{-2\ln u_1}\,\sin(2\pi u_2).[[/eq]]
+<p>0 dB significa ruido tan fuerte como la señal; −10 dB, ruido diez veces más potente. Los experimentos usan un generador pseudoaleatorio con semilla fija (<i>mulberry32</i>) para que los resultados sean reproducibles.</p>
+<p class="donde">Código: <code>lib/sintesis.js</code> → <code>agregarRuido</code>, <code>mulberry32</code>; <code>public/app.js</code> → <code>agregarRuido</code> (deslizador de la demo).</p>
+
+<h2>Colisiones de hash</h2>
+<p>Si los $U$ hashes distintos del índice estuvieran repartidos de manera uniforme en $2^{24}$ valores, un hash cualquiera de la consulta coincidiría por azar con probabilidad</p>
+[[eq:colision]]p\approx\frac{U}{2^{24}}={{ocup}}\ \%\quad(U={{huellas_uni}}\ \text{con 12 canciones}).[[/eq]]
+<p>La medición real fue {{azar}} % ({{ratio}} veces mayor), porque la música sintética (y la real) no usa el espacio de manera uniforme: las notas ocupan pocas frecuencias y los ritmos pocos intervalos. Por eso la decisión <b>no</b> se basa en que «haya coincidencias», sino en que se <b>concentren en un desplazamiento</b> (ecuación [[ref:puntaje]]).</p>
+<p class="donde">Código: <code>demo/scripts/experimentos.js</code> → <code>costos</code>.</p>
+
+<h2>Síntesis de las canciones de prueba</h2>
+<p>Para no usar material con derechos de autor, la base se genera por código. Cada canción se compone de notas; la frecuencia de la nota MIDI $n$ en afinación temperada, con un desafinado propio de la pieza $c\in[-50,50]$ centésimas, es</p>
+[[eq:midi]]f_0(n,c)=440\cdot 2^{\frac{n-69}{12}+\frac{c}{1200}}\ \text{Hz}.[[/eq]]
+<p>Cada nota de duración $d$ es una suma de armónicos, multiplicada por una envolvente de ataque lineal de 10 ms, caída exponencial y liberación lineal de 30 ms:</p>
+[[eq:nota]]\begin{aligned}x(t)&=a\,A(t)\sum_{h=1}^{4}w_h\sin(2\pi h f_0 t),\\ A(t)&=\min\!\left(1,\tfrac{t}{0{,}01}\right)\cdot\max\!\left(0,\min\!\left(1,\tfrac{d-t}{0{,}03}\right)\right)\cdot e^{-t/\tau},\\ \tau&=\frac{\min(d,\,0{,}7)}{2{,}5}.\end{aligned}[[/eq]]
+<p>Los pesos de los armónicos son $w=[1,\;0{,}25{+}0{,}4u_1,\;0{,}08{+}0{,}3u_2,\;0{,}03{+}0{,}12u_3]$ con $u_i$ uniformes (cada pieza tiene su timbre), y un armónico solo se incluye si $hf_0<f_s/2-200$ Hz, para evitar aliasing. Las amplitudes son $a=0{,}35$ (melodía), $0{,}30$ (bajo) y $0{,}12$ (arpegio). El tempo es $\mathrm{bpm}\in[80,139]$, de modo que un pulso dura $60/\mathrm{bpm}$ segundos. La melodía son frases de 8 pulsos sobre una escala (mayor, menor, pentatónica o dórica) que se repiten en el orden A–B–A–C. Finalmente la señal se normaliza para que su pico sea 0,8:</p>
+[[eq:norm]]x\leftarrow 0{,}8\,\frac{x}{\max_i|x[i]|}.[[/eq]]
+<p class="donde">Código: <code>lib/sintesis.js</code> → <code>midiAHz</code>, <code>cancion</code>.</p>
+
+<h2>Visualización 2D y 3D</h2>
+<p>Para dibujar el espectrograma, la potencia se normaliza a un rango de 70 dB bajo el máximo y se usa como color (ambas vistas) y como altura (vista 3D):</p>
+[[eq:vis]]v=\operatorname{clamp}\!\left(\frac{S[m,k]-(S_{\max}-70)}{70},\,0,\,1\right),\qquad y=v^{1{,}9}\cdot y_{\max}\cdot e,[[/eq]]
+<p>donde $e$ es el control de «Altura». El exponente 1,9 aplana el ruido de fondo (valores bajos de $v$) y realza las notas (valores cercanos a 1). El color es una interpolación lineal por tramos entre cinco paradas (negro $\to$ azul $\to$ magenta $\to$ naranja $\to$ amarillo en $v=0;\,0{,}35;\,0{,}6;\,0{,}82;\,1$). La malla 3D toma, en cada celda (2 bins de frecuencia × varias tramas), el <b>máximo</b> de $S$ para no perder picos al reducir la resolución, y sus ejes son tiempo ($t=mH/f_s$) y frecuencia ($f=kf_s/N$).</p>
+<p class="donde">Código: <code>lib/colores.js</code> → <code>colorMapa</code>; <code>public/spectro3d.js</code>; <code>public/app.js</code> → <code>dibujar2D</code>.</p>
+
+<h2>Métricas de evaluación</h2>
+<p>Con $n$ consultas de canciones de la base y una canción verdadera $s_i$ para cada una, se reportan:</p>
+[[eq:metricas]]\begin{aligned}\mathrm{top}\text{-}1&=\frac{1}{n}\sum_{i=1}^{n}\mathbb{1}[\hat s_i=s_i],\\ \mathrm{aceptadas}&=\frac{1}{n}\sum_{i=1}^{n}\mathbb{1}[\hat s_i=s_i\ \wedge\ \mathrm{puntaje}\ge\tau],\\ \mathrm{FPR}&=\frac{\#\{\text{canciones ajenas aceptadas}\}}{\#\{\text{consultas ajenas}\}}.\end{aligned}[[/eq]]
+<p>«Top-1» mide si la canción correcta fue la más votada; «aceptadas» exige además superar el umbral; y la tasa de falsos positivos (FPR) se mide consultando con canciones que <i>no</i> están en la base. La FFT se evalúa por su aceleración respecto de la DFT, $t_{\mathrm{DFT}}/t_{\mathrm{FFT}}$, y por el error numérico máximo entre ambas, $\max_k|X_{\mathrm{FFT}}[k]-X_{\mathrm{DFT}}[k]|$ (≈ 10<sup>−13</sup>, del orden del redondeo en doble precisión).</p>
+<p class="donde">Código: <code>demo/scripts/experimentos.js</code>. Resultados completos: <code>informe/resultados.json</code> y el informe IEEE.</p>
+
+<h2>Tabla de parámetros y mapa del código</h2>
+<table class="txt">
+<caption>Tabla 2. Parámetros de la huella acústica (valores reales de <code>lib/huella.js</code>)</caption>
+<thead><tr><th>Símbolo</th><th>Significado</th><th>Valor</th></tr></thead>
+<tbody>
+<tr><td>$f_s$</td><td>Frecuencia de muestreo</td><td>{{fs}} Hz</td></tr>
+<tr><td>$N$</td><td>Tamaño de ventana y de FFT</td><td>{{N}} muestras ({{ventana_ms}} ms)</td></tr>
+<tr><td>$H$</td><td>Salto entre ventanas</td><td>{{hop}} muestras ({{hop_ms}} ms)</td></tr>
+<tr><td>$\Delta_t,\ \Delta_f$</td><td>Vecindad de un pico</td><td>±{{vect}} tramas, ±{{vecf}} bins</td></tr>
+<tr><td>$\gamma$</td><td>Margen bajo el máximo global</td><td>{{marg}} dB</td></tr>
+<tr><td>$k_{\min}$</td><td>Primer bin considerado</td><td>{{kmin}} ({{kmin_hz}} Hz)</td></tr>
+<tr><td>$F$</td><td>Pares por ancla</td><td>{{fan}}</td></tr>
+<tr><td>$\Delta m_{\max}$</td><td>Separación máxima ancla–objetivo</td><td>{{dtmax}} tramas</td></tr>
+<tr><td>$\tau$</td><td>Umbral de decisión</td><td>{{umbral}} votos</td></tr>
+</tbody></table>
+
+<table class="txt">
+<caption>Tabla 3. Dónde se implementa cada modelo</caption>
+<thead><tr><th>Modelo</th><th>Archivo</th><th>Función</th></tr></thead>
+<tbody>
+<tr><td>DFT, FFT, ventana de Hann</td><td><code>lib/huella.js</code></td><td><code>dft</code>, <code>fft</code>, <code>hann</code></td></tr>
+<tr><td>Espectrograma</td><td><code>lib/huella.js</code></td><td><code>espectrograma</code></td></tr>
+<tr><td>Picos, pares y hashes</td><td><code>lib/huella.js</code></td><td><code>picos</code>, <code>hashes</code>, <code>huella</code></td></tr>
+<tr><td>Índice y votación</td><td><code>lib/huella.js</code></td><td><code>Indice.agregar / buscar</code></td></tr>
+<tr><td>Síntesis, ruido, WAV</td><td><code>lib/sintesis.js</code></td><td><code>cancion</code>, <code>agregarRuido</code>, <code>leerWav</code></td></tr>
+<tr><td>Mapa de color</td><td><code>lib/colores.js</code></td><td><code>colorMapa</code></td></tr>
+<tr><td>Vista 3D y 2D</td><td><code>public/spectro3d.js</code>, <code>public/app.js</code></td><td><code>crearEspectro3D</code>, <code>dibujar2D</code></td></tr>
+<tr><td>Servidor de búsqueda</td><td><code>server.js</code></td><td><code>POST /api/reconocer</code></td></tr>
+<tr><td>Experimentos y pruebas</td><td><code>scripts/experimentos.js</code>, <code>test/huella.test.js</code></td><td>—</td></tr>
+</tbody></table>
+
+</body>
+</html>

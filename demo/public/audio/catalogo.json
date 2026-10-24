@@ -1,0 +1,98 @@
+[
+  {
+    "id": "tema01",
+    "nombre": "Tema 01",
+    "descripcion": "pentatónica en La♯, 127 bpm",
+    "archivo": "tema01.wav",
+    "duracion_s": 30,
+    "semilla": 1
+  },
+  {
+    "id": "tema02",
+    "nombre": "Tema 02",
+    "descripcion": "dórica en Do♯, 98 bpm",
+    "archivo": "tema02.wav",
+    "duracion_s": 30,
+    "semilla": 2
+  },
+  {
+    "id": "tema03",
+    "nombre": "Tema 03",
+    "descripcion": "menor en Do♯, 117 bpm",
+    "archivo": "tema03.wav",
+    "duracion_s": 30,
+    "semilla": 3
+  },
+  {
+    "id": "tema04",
+    "nombre": "Tema 04",
+    "descripcion": "pentatónica en La, 94 bpm",
+    "archivo": "tema04.wav",
+    "duracion_s": 30,
+    "semilla": 4
+  },
+  {
+    "id": "tema05",
+    "nombre": "Tema 05",
+    "descripcion": "mayor en Re♯, 122 bpm",
+    "archivo": "tema05.wav",
+    "duracion_s": 30,
+    "semilla": 5
+  },
+  {
+    "id": "tema06",
+    "nombre": "Tema 06",
+    "descripcion": "menor en Mi, 82 bpm",
+    "archivo": "tema06.wav",
+    "duracion_s": 30,
+    "semilla": 6
+  },
+  {
+    "id": "tema07",
+    "nombre": "Tema 07",
+    "descripcion": "mayor en Sol, 117 bpm",
+    "archivo": "tema07.wav",
+    "duracion_s": 30,
+    "semilla": 7
+  },
+  {
+    "id": "tema08",
+    "nombre": "Tema 08",
+    "descripcion": "mayor en Re, 99 bpm",
+    "archivo": "tema08.wav",
+    "duracion_s": 30,
+    "semilla": 8
+  },
+  {
+    "id": "tema09",
+    "nombre": "Tema 09",
+    "descripcion": "mayor en Do♯, 91 bpm",
+    "archivo": "tema09.wav",
+    "duracion_s": 30,
+    "semilla": 9
+  },
+  {
+    "id": "tema10",
+    "nombre": "Tema 10",
+    "descripcion": "dórica en Re♯, 95 bpm",
+    "archivo": "tema10.wav",
+    "duracion_s": 30,
+    "semilla": 10
+  },
+  {
+    "id": "tema11",
+    "nombre": "Tema 11",
+    "descripcion": "dórica en Re♯, 114 bpm",
+    "archivo": "tema11.wav",
+    "duracion_s": 30,
+    "semilla": 11
+  },
+  {
+    "id": "tema12",
+    "nombre": "Tema 12",
+    "descripcion": "dórica en Do, 115 bpm",
+    "archivo": "tema12.wav",
+    "duracion_s": 30,
+    "semilla": 12
+  }
+]

@@ -1,0 +1,19 @@
+{
+  "name": "reconocimiento-audio-informe",
+  "version": "1.0.0",
+  "description": "Informe IEEE en doble columna",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js",
+    "modelos": "node build_modelos.js",
+    "manual": "node build_manual.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "katex": "^0.19.0"
+  }
+}

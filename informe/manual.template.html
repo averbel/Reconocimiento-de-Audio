@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Manual de uso — Reconocimiento de audio con la Transformada de Fourier</title>
+<style>
+  @page { size: 8.5in 11in; margin: 0.7in 0.8in; }
+  html { font-family: "Segoe UI", Calibri, Arial, sans-serif; font-size: 10pt; line-height: 1.38; color: #15191f; }
+  body { margin: 0; counter-reset: sec; }
+  .portada { text-align: center; padding: 0.25in 0 0; break-after: page; }
+  .portada .logo { width: 60px; height: 60px; margin: 0 auto 12pt; border-radius: 16px; background: linear-gradient(135deg, #0f2f8f, #3b6cf0); display: grid; place-items: center; }
+  .portada .logo svg { width: 44px; height: 44px; stroke: #fff; fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .portada h1 { font-size: 27pt; line-height: 1.15; margin: 0 0 8pt; color: #0f2f8f; }
+  .portada h2::before { content: ""; }
+  .portada h2 { font-size: 15pt; font-weight: 400; margin: 0 0 16pt; color: #44506a; border: 0; counter-increment: none; }
+  .portada p { margin: 3pt 0; font-size: 11.5pt; }
+  .portada .autor { font-size: 13pt; font-weight: 600; margin-top: 14pt; }
+  .portada .url { display: inline-block; margin-top: 18pt; padding: 7pt 14pt; background: #eef3fd; border: 1px solid #c8d6f6; border-radius: 8px; font-size: 11pt; color: #0f2f8f; }
+  .portada img { width: 90%; margin-top: 22pt; border: 1px solid #d5dbe8; border-radius: 8px; }
+  h2 { font-size: 14pt; color: #0f2f8f; margin: 15pt 0 5pt; counter-increment: sec; counter-reset: sub; break-after: avoid; border-bottom: 2px solid #c8d6f6; padding-bottom: 3pt; }
+  h2::before { content: counter(sec) ".  "; }
+  h2.nonum { counter-increment: none; } h2.nonum::before { content: ""; }
+  h3 { font-size: 11.5pt; color: #1f3a8a; margin: 12pt 0 3pt; break-after: avoid; }
+  p { margin: 0 0 6pt; text-align: justify; hyphens: auto; }
+  ol, ul { margin: 0 0 7pt; padding-left: 0.28in; }
+  li { margin-bottom: 3pt; }
+  .salto { break-before: page; }
+  .nobreak { break-inside: avoid; }
+  figure { margin: 8pt 0 10pt; break-inside: avoid; text-align: center; }
+  figure img { width: 76%; border: 1px solid #d5dbe8; border-radius: 6px; }
+  figure.med img { width: 62%; } figure.peq img { width: 44%; }
+  .fila { display: flex; gap: 10pt; align-items: flex-start; justify-content: center; margin: 8pt 0 10pt; break-inside: avoid; }
+  .fila figure { flex: 1; margin: 0; } .fila img { width: 100%; }
+  figcaption { font-size: 9pt; color: #44506a; margin-top: 4pt; text-align: center; }
+  .caja { padding: 7pt 11pt; margin: 8pt 0 10pt; border-radius: 6px; font-size: 10pt; break-inside: avoid; }
+  .caja b:first-child { display: inline-block; margin-right: 4pt; }
+  .tip { background: #edf8f0; border-left: 4px solid #1b7f3b; } .tip b:first-child { color: #1b7f3b; }
+  .ojo { background: #fff6e5; border-left: 4px solid #b26a00; } .ojo b:first-child { color: #b26a00; }
+  .info { background: #eef3fd; border-left: 4px solid #1f4fd8; } .info b:first-child { color: #1f4fd8; }
+  table { border-collapse: collapse; width: 100%; font-size: 9pt; margin: 5pt 0 9pt; }
+  th, td { padding: 3pt 6pt; border-bottom: 0.6pt solid #c4cad6; text-align: left; vertical-align: top; }
+  tr { break-inside: avoid; }
+  th { background: #eef3fd; border-top: 1pt solid #1f3a8a; border-bottom: 1pt solid #1f3a8a; }
+  td.c, th.c { text-align: center; }
+  caption { caption-side: top; text-align: left; font-weight: 600; font-size: 10pt; margin-bottom: 3pt; color: #1f3a8a; }
+  code, kbd { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #eef1f7; padding: 0 3pt; border-radius: 3px; }
+  kbd { border: 1px solid #b8c0d0; border-bottom-width: 2px; background: #fff; }
+  pre { background: #12192a; color: #e8edf7; padding: 8pt 11pt; border-radius: 6px; font: 9.5pt/1.45 Consolas, "Courier New", monospace; margin: 5pt 0 9pt; break-inside: avoid; white-space: pre-wrap; }
+  .num { display: inline-grid; place-items: center; width: 15pt; height: 15pt; border-radius: 50%; background: #e11d48; color: #fff; font-size: 8.5pt; font-weight: 700; margin-right: 3pt; vertical-align: 1pt; }
+  .dos { column-count: 2; column-gap: 0.3in; }
+  .dos > * { break-inside: avoid; }
+  .indice { column-count: 2; column-gap: 0.4in; font-size: 10.5pt; margin: 8pt 0; }
+  .indice div { break-inside: avoid; margin-bottom: 2pt; }
+  dl { margin: 0 0 8pt; } dt { font-weight: 700; color: #1f3a8a; margin-top: 5pt; } dd { margin: 0 0 2pt 0.25in; }
+</style>
+</head>
+<body>
+
+<!-- ============================================================== PORTADA -->
+<section class="portada">
+  <div class="logo"><svg viewBox="0 0 32 32"><path d="M2 16h3l3-9 4 18 4-14 3 8 3-5 2 2h6"/></svg></div>
+  <h1>Manual de uso</h1>
+  <h2>Reconocimiento de audio con la Transformada de Fourier</h2>
+  <p>Aplicación web para identificar una canción a partir de un fragmento de audio</p>
+  <p class="autor">Andrés Felipe Verbel Pacheco</p>
+  <p>Curso de Desarrollo Web Full Stack — CUC · Octubre de 2026</p>
+  <p class="url">Versión en línea: <b>https://reconocimiento-audio-fourier.vercel.app</b></p>
+  <img src="figuras/manual/m03_completa.png" alt="Pantalla principal de la aplicación">
+</section>
+
+<!-- ============================================================== ÍNDICE -->
+<h2 class="nonum">Contenido</h2>
+<div class="indice">
+  <div><b>1.</b> ¿Qué hace esta aplicación?</div>
+  <div><b>2.</b> Requisitos</div>
+  <div><b>3.</b> Cómo abrir la aplicación</div>
+  <div><b>4.</b> Recorrido por la pantalla</div>
+  <div><b>5.</b> Reconocer una canción</div>
+  <div><b>6.</b> Interpretar el resultado</div>
+  <div><b>7.</b> El espectrograma 3D y 2D</div>
+  <div><b>8.</b> Las cinco etapas del algoritmo</div>
+  <div><b>9.</b> Tema oscuro y enlaces con parámetros</div>
+  <div><b>10.</b> Solución de problemas</div>
+  <div><b>11.</b> Qué no hace (límites)</div>
+  <div><b>12.</b> Guía rápida para exponer la demo</div>
+  <div><b>13.</b> Anexo: comandos, carpetas y glosario</div>
+</div>
+
+<!-- ============================================================== 1 -->
+<h2>¿Qué hace esta aplicación?</h2>
+<p>Es una versión didáctica de lo que hacen servicios como Shazam: escuchas unos segundos de una canción y la aplicación dice <b>cuál es</b> y <b>en qué momento</b> de la canción estás. Funciona con una base de <b>{{n_can}} canciones sintéticas</b> de 30 segundos (generadas por código para no usar música con derechos de autor), y reconoce fragmentos incluso con mucho ruido.</p>
+<p>Además de reconocer, la aplicación <b>muestra cómo lo hace</b>: dibuja el espectrograma (la «huella» del sonido) en 3D y en 2D, marca los picos que usa el algoritmo, y permite revisar cada etapa. El fundamento matemático está en el documento <i>Modelos_Matematicos.pdf</i>.</p>
+<div class="caja info"><b>En una frase:</b> eliges o grabas un audio → la aplicación calcula su espectrograma con la FFT → extrae los picos → forma hashes → el servidor los compara con su índice y vota → te dice la canción ganadora.</div>
+
+<!-- ============================================================== 2 -->
+<h2>Requisitos</h2>
+<table>
+<caption>Tabla 1. Lo que necesitas</caption>
+<thead><tr><th style="width:28%">Elemento</th><th>Detalle</th></tr></thead>
+<tbody>
+<tr><td><b>Sistema</b></td><td>Windows 10 u 11 (el arranque con doble clic usa un archivo <code>.bat</code>). En otros sistemas se inicia con dos comandos (sección 3).</td></tr>
+<tr><td><b>Node.js</b></td><td>Se recomienda la versión <b>LTS</b> actual, desde <b>nodejs.org</b> (el desarrollo y las pruebas se hicieron con la 26). Solo hace falta para ejecutar la aplicación en tu computador.</td></tr>
+<tr><td><b>Navegador</b></td><td>Microsoft Edge o Google Chrome actualizados (se probó con Edge). Para la vista 3D el navegador debe tener WebGL activado, lo habitual.</td></tr>
+<tr><td><b>Internet</b></td><td>Solo la <b>primera vez</b>, para descargar las dependencias (<code>npm install</code>). Después funciona sin conexión.</td></tr>
+<tr><td><b>Micrófono</b></td><td>Opcional, solo para el modo «Micrófono».</td></tr>
+<tr><td><b>Sin instalar nada</b></td><td>Puedes usar la versión en línea: <b>https://reconocimiento-audio-fourier.vercel.app</b></td></tr>
+</tbody></table>
+
+<!-- ============================================================== 3 -->
+<h2>Cómo abrir la aplicación</h2>
+<h3>Opción A — Doble clic (Windows, la más fácil)</h3>
+<ol>
+<li>Descomprime el archivo entregado y entra a la carpeta <code>demo</code>.</li>
+<li>Haz doble clic en <b>iniciar.bat</b>.</li>
+<li>Se abre una ventana negra. La <b>primera vez</b> instala las dependencias (necesita internet y puede tardar un minuto); las siguientes veces es inmediato.</li>
+<li>Al terminar se abre una segunda ventana titulada <i>«Servidor de la demo»</i> y el programa muestra <code>Listo: http://localhost:3000</code>. El navegador debería abrirse solo en esa dirección.</li>
+</ol>
+<div class="caja ojo"><b>Importante:</b> deja abierta la ventana <i>«Servidor de la demo»</i> mientras uses la aplicación. <b>Al cerrarla, la aplicación se detiene.</b> Si el navegador no se abre solo, escribe en él la dirección que muestra el mensaje <code>Listo:</code> (casi siempre <code>http://localhost:3000</code>; si ese puerto estaba ocupado, el programa elige el siguiente libre, como 3001).</div>
+
+<h3>Opción B — Con comandos</h3>
+<pre>cd demo
+npm install      # solo la primera vez
+npm start        # inicia el servidor</pre>
+<p>Luego abre <code>http://localhost:3000</code> en el navegador. Para detener el servidor pulsa <kbd>Ctrl</kbd>+<kbd>C</kbd> en esa ventana.</p>
+
+<h3>Opción C — Versión en línea</h3>
+<p>Abre <b>https://reconocimiento-audio-fourier.vercel.app</b>. No necesitas instalar nada. La primera visita puede tardar unos segundos más si nadie la había usado en un rato. El micrófono funciona porque la dirección es segura (HTTPS).</p>
+
+<!-- ============================================================== 4 -->
+<h2>Recorrido por la pantalla</h2>
+<p>Al abrir la aplicación ves esto. Todavía no hay nada analizado, por eso el visor muestra una invitación a reconocer un audio.</p>
+<figure>
+<img src="figuras/manual/m01_inicio.png" alt="Pantalla inicial">
+<figcaption>Figura 1. Pantalla inicial. <b>1</b> Barra de etapas · <b>2</b> Fuente de audio · <b>3</b> Visor del espectrograma · <b>4</b> Botón de tema claro/oscuro.</figcaption>
+</figure>
+<p>Cuando ya hay un reconocimiento, aparecen las demás zonas (Figura 2):</p>
+<figure>
+<img src="figuras/manual/m03_completa.png" alt="Pantalla con un reconocimiento terminado">
+<figcaption>Figura 2. Pantalla tras reconocer un fragmento. <b>1</b> Etapas del algoritmo · <b>2</b> Fuente de audio · <b>3</b> Resultado · <b>4</b> Espectrograma 3D · <b>5</b> Forma de onda · <b>6</b> Histograma de desplazamientos.</figcaption>
+</figure>
+<table>
+<caption>Tabla 2. Qué hay en cada zona</caption>
+<thead><tr><th class="c" style="width:6%">N.º</th><th style="width:24%">Zona</th><th>Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="num">1</span></td><td>Barra de etapas</td><td>Cinco tarjetas (Señal, FFT, Picos, Hashes, Votación) que se iluminan mientras se reconoce. Debajo de cada nombre aparece un dato real (por ejemplo «153 ventanas»). Al pulsar una, se explica qué hace y el visor muestra lo que corresponde.</td></tr>
+<tr><td class="c"><span class="num">2</span></td><td>Fuente de audio</td><td>Aquí eliges <b>qué audio</b> analizar: un fragmento de la base, un archivo tuyo o una grabación del micrófono.</td></tr>
+<tr><td class="c"><span class="num">3</span></td><td>Resultado</td><td>La canción reconocida, el medidor de confianza y la tabla de candidatas.</td></tr>
+<tr><td class="c"><span class="num">4</span></td><td>Espectrograma</td><td>La imagen del sonido en 3D o 2D, con picos y pares de hash. Se puede girar, acercar y escuchar.</td></tr>
+<tr><td class="c"><span class="num">5</span></td><td>Forma de onda</td><td>El audio analizado, tal como lo ve el algoritmo (a 8 kHz). Muestra un cursor al reproducirlo.</td></tr>
+<tr><td class="c"><span class="num">6</span></td><td>Histograma</td><td>Cómo votó cada coincidencia. La barra amarilla es el desplazamiento ganador (sección 6).</td></tr>
+</tbody></table>
+
+<!-- ============================================================== 5 -->
+<h2>Reconocer una canción</h2>
+<p>La tarjeta <b>Fuente de audio</b> tiene tres pestañas. Empieza por la primera, que es la más sencilla.</p>
+<div class="fila">
+<figure><img src="figuras/manual/m02_fuente.png" alt="Pestaña Fragmento"><figcaption>«Fragmento»</figcaption></figure>
+<figure><img src="figuras/manual/m08_archivo.png" alt="Pestaña Archivo"><figcaption>«Archivo»</figcaption></figure>
+<figure><img src="figuras/manual/m09_mic.png" alt="Pestaña Micrófono"><figcaption>«Micrófono»</figcaption></figure>
+</div>
+<p style="font-size:9pt;color:#44506a;text-align:center;margin-top:-4pt">Figura 3. Las tres pestañas de la tarjeta «Fuente de audio».</p>
+
+<h3>5.1  Pestaña «Fragmento» (recomendada para probar)</h3>
+<p>Toma un trozo de una de las {{n_can}} canciones de la base y, si quieres, le añade ruido para ponerla a prueba.</p>
+<ol>
+<li><b>Canción de la base:</b> elige una de la lista (cada una muestra su escala y tempo).</li>
+<li><b>Inicio del fragmento:</b> desde qué segundo se toma (de 0 a 25 s).</li>
+<li><b>Duración:</b> cuánto dura el fragmento (de 2 a 10 s). Con 5 s o más el reconocimiento es muy fiable.</li>
+<li><b>Ruido blanco (SNR):</b> cuánto ruido se mezcla, en decibelios. <b>30 dB</b> es casi limpio, <b>0 dB</b> es ruido tan fuerte como la música y <b>−10 dB</b> es mucho más fuerte. Marca <i>«Sin ruido»</i> para desactivarlo.</li>
+<li>Opcional: pulsa <b>▶ Escuchar fragmento</b> para oír el trozo con el ruido elegido, o <b>▶ Canción completa</b> para oír la canción entera limpia. Vuelve a pulsar para detener.</li>
+<li>Pulsa <b>Reconocer</b>. Verás cómo se iluminan las cinco etapas y, en un par de segundos, aparece el resultado.</li>
+</ol>
+
+<h3>5.2  Pestaña «Archivo»</h3>
+<ol>
+<li>Pulsa el selector y elige un audio de tu computador (WAV, MP3, OGG y otros formatos que tu navegador sepa abrir).</li>
+<li>Pulsa <b>Reconocer</b>. El navegador lo convierte a mono y 8 kHz por su cuenta; no se sube a ningún sitio salvo los hashes calculados.</li>
+</ol>
+<div class="caja ojo"><b>Atención:</b> la aplicación solo conoce las {{n_can}} canciones sintéticas de su base. Si subes una canción comercial, el resultado correcto es <b>«Sin coincidencia fiable»</b>. Para probar esta pestaña con éxito, sube uno de los archivos <code>temaNN.wav</code> de la carpeta <code>demo/public/audio</code>.</div>
+
+<h3>5.3  Pestaña «Micrófono»</h3>
+<ol>
+<li>Ajusta la <b>duración de la grabación</b> (de 3 a 12 s; 6 s por defecto).</li>
+<li>Pulsa <b>Grabar y reconocer</b>. La primera vez el navegador pide <b>permiso para usar el micrófono</b>: pulsa «Permitir».</li>
+<li>Mientras se muestra la cuenta regresiva «🔴 Grabando… 5 s», haz sonar una canción de la base cerca del micrófono (por ejemplo, con <b>▶ Canción completa</b> en la pestaña Fragmento, desde otro dispositivo si es posible).</li>
+<li>Al terminar, la grabación se analiza igual que cualquier otro audio.</li>
+</ol>
+<div class="caja tip"><b>Consejos:</b> usa un volumen medio y evita ruido de fondo; graba al menos 5 s; no tapes el micrófono. El micrófono solo funciona en <code>localhost</code> o en la versión en línea (HTTPS).</div>
+<div class="caja info"><b>Nota honesta:</b> el modo micrófono se probó con un micrófono simulado alimentado con audio real, y funcionó. La calidad con un micrófono físico depende de tus parlantes, el eco y el ruido de la sala.</div>
+
+<!-- ============================================================== 6 -->
+<h2>Interpretar el resultado</h2>
+<figure class="med"><img src="figuras/manual/m04_resultado.png" alt="Tarjeta de resultado"><figcaption>Figura 4. Tarjeta «Resultado».</figcaption></figure>
+<dl>
+<dt>✔ Tema 07 (en verde)</dt><dd>La canción reconocida. Si en cambio aparece <b>✖ Sin coincidencia fiable</b> (en rojo), ninguna canción alcanzó el umbral de votos.</dd>
+<dt>Barra de confianza</dt><dd>El largo de la barra es el <b>puntaje</b> de la canción ganadora (cuántos hashes coincidieron en un mismo instante). La <b>marca vertical</b> es el <b>umbral ({{umbral}} votos)</b>: si la barra la supera, se acepta el resultado. Debajo se lee el puntaje y el de la segunda candidata.</dd>
+<dt>Posición estimada</dt><dd>En qué parte de la canción está el fragmento (por ejemplo «0:12»). Si la pieza repite frases, puede coincidir con otra aparición, y por eso el texto lo avisa.</dd>
+<dt>Candidatas</dt><dd>Las canciones con más votos. Una reconocida con seguridad tiene un puntaje muy alto y las demás, casi 1.</dd>
+<dt>Huellas enviadas / tiempo de búsqueda</dt><dd>Cuántos hashes se mandaron al servidor y cuánto tardó la búsqueda (normalmente menos de 2 milisegundos).</dd>
+</dl>
+<p><b>Histograma de desplazamientos.</b> Cada hash que coincide con la base «vota» por un valor llamado desplazamiento (la diferencia entre el instante en la base y en tu fragmento). Si es la canción correcta, casi todos los votos caen en <b>un solo valor</b>: es la barra amarilla alta de la Figura 2 (6). Las barras azules pequeñas son coincidencias casuales.</p>
+
+<h3>Cuántos votos son normales</h3>
+<p>Con la base de {{n_can}} canciones, la mediana de votos de la canción correcta fue de <b>{{votos_5}}</b> con 5 s sin ruido y de <b>{{votos_10}}</b> con 10 s; con ruido de 0 dB y 5 s bajó a <b>{{votos_5_0db}}</b>, y con −5 dB a <b>{{votos_5_m5}}</b>. Las canciones equivocadas casi siempre quedan entre 1 y 6 votos. Por eso el umbral de {{umbral}} separa bien ambos casos.</p>
+{{tabla_rendimiento}}
+<p style="font-size:9pt;color:#44506a;margin-top:-6pt">Tabla 3. Porcentaje de fragmentos reconocidos y aceptados según su duración y el ruido (60 consultas por celda; experimento del informe IEEE).</p>
+
+<h3>Cuando sale «Sin coincidencia fiable»</h3>
+<figure class="med"><img src="figuras/manual/m12_sin_coincidencia.png" alt="Resultado sin coincidencia"><figcaption>Figura 5. Resultado para una canción que no está en la base.</figcaption></figure>
+<p>No es un error: significa que ninguna canción reunió suficientes votos. Las causas más comunes son: (a) la canción <b>no está en la base</b> (como la de la Figura 5), (b) el fragmento es <b>muy corto</b> (menos de 3 s), o (c) hay <b>demasiado ruido</b> (por debajo de −10 dB). Prueba con una duración mayor o menos ruido.</p>
+
+<!-- ============================================================== 7 -->
+<h2>El espectrograma 3D y 2D</h2>
+<p>El espectrograma es una «fotografía» del sonido: el eje horizontal es el <b>tiempo</b>, el eje de profundidad es la <b>frecuencia</b> (de 0 a 2 kHz) y la <b>altura y el color</b> indican la <b>potencia</b> de cada frecuencia en cada instante. Las notas musicales aparecen como crestas largas; el ruido, como una alfombra baja y rugosa.</p>
+<figure>
+<img src="figuras/manual/m06_controles.png" alt="Controles del visor">
+<figcaption>Figura 6. Controles del visor. Los números se explican en la Tabla 4.</figcaption>
+</figure>
+<table>
+<caption>Tabla 4. Controles del espectrograma</caption>
+<thead><tr><th class="c" style="width:6%">N.º</th><th style="width:24%">Control</th><th>Qué hace</th></tr></thead>
+<tbody>
+<tr><td class="c"><span class="num">1</span></td><td>3D / 2D</td><td>Cambia entre la vista en relieve y la vista plana clásica (con ejes y números).</td></tr>
+<tr><td class="c"><span class="num">2</span></td><td>Picos</td><td>Muestra u oculta las <b>esferas rojas</b>: los máximos locales que forman la huella de la canción.</td></tr>
+<tr><td class="c"><span class="num">3</span></td><td>Pares de hash</td><td>Muestra u oculta las <b>líneas celestes</b> que unen cada pico «ancla» con sus «objetivos»; cada línea genera un hash.</td></tr>
+<tr><td class="c"><span class="num">4</span></td><td>▶ Escuchar</td><td>Reproduce el audio analizado con un <b>cabezal amarillo</b> que recorre el espectrograma y la forma de onda. Se activa tras reconocer. Vuelve a pulsar para detener.</td></tr>
+<tr><td class="c"><span class="num">5</span></td><td>Punto de vista</td><td>Perspectiva, Superior (como una vista en planta), Lateral y Frontal. La cámara se mueve con una animación suave.</td></tr>
+<tr><td class="c"><span class="num">6</span></td><td>Altura</td><td>Exagera o aplana el relieve (solo 3D).</td></tr>
+<tr><td class="c"><span class="num">7</span></td><td>Girar</td><td>Rotación automática, útil para exponer.</td></tr>
+<tr><td class="c"><span class="num">8</span></td><td>Área 3D</td><td><b>Arrastrar</b> con el botón izquierdo: girar · <b>Rueda</b>: acercar o alejar · <b>Botón derecho y arrastrar</b>: desplazar · <b>Pasar el cursor</b> sobre la superficie: lee tiempo, frecuencia y potencia en un recuadro.</td></tr>
+<tr><td class="c"><span class="num">9</span></td><td>Escala de color</td><td>De amarillo (0 dB, lo más fuerte) a azul oscuro (−70 dB), siempre relativa al punto más fuerte de ese audio.</td></tr>
+</tbody></table>
+<figure class="med"><img src="figuras/manual/m10_visor2d.png" alt="Vista 2D del espectrograma"><figcaption>Figura 7. La misma canción en la vista 2D, con picos (puntos rojos) y pares de hash (líneas).</figcaption></figure>
+<div class="caja tip"><b>Truco:</b> para ver «la constelación» como la ve el algoritmo, activa <i>Pares de hash</i> en la vista <b>Superior</b> o en <b>2D</b>.</div>
+
+<!-- ============================================================== 8 -->
+<h2>Las cinco etapas del algoritmo</h2>
+<p>La barra superior no es solo decorativa: <b>después de reconocer, pulsa cualquier etapa</b> para ver su explicación y qué muestra el visor en ese momento.</p>
+<figure><img src="figuras/manual/m07_etapas.png" alt="Barra de etapas completada"><figcaption>Figura 8. Barra de etapas al terminar: cada tarjeta muestra el dato real de ese análisis.</figcaption></figure>
+<table>
+<caption>Tabla 5. Qué hace cada etapa</caption>
+<thead><tr><th style="width:15%">Etapa</th><th>Qué hace</th><th style="width:27%">Al pulsarla</th></tr></thead>
+<tbody>
+<tr><td><b>1. Señal</b></td><td>Convierte el audio a mono y lo remuestrea a 8 kHz (solo importa la banda de 0 a 4 kHz, donde viven la melodía y sus armónicos).</td><td>Te lleva a la forma de onda.</td></tr>
+<tr><td><b>2. FFT</b></td><td>Corta la señal en ventanas de 128 ms (una cada 32 ms) y calcula la Transformada de Fourier de cada una. Juntas forman el espectrograma.</td><td>Oculta picos y pares: ves solo el espectrograma.</td></tr>
+<tr><td><b>3. Picos</b></td><td>Se queda con los máximos locales (las esferas rojas): la «constelación» de la canción, que resiste el ruido.</td><td>Muestra los picos.</td></tr>
+<tr><td><b>4. Hashes</b></td><td>Une cada pico con los siguientes y forma un hash de 24 bits por cada par (frecuencia 1, frecuencia 2, separación en el tiempo).</td><td>Muestra picos y pares.</td></tr>
+<tr><td><b>5. Votación</b></td><td>El servidor busca esos hashes en su índice; cada coincidencia vota por un desplazamiento. Gana la canción con más votos concentrados.</td><td>Te lleva al histograma.</td></tr>
+</tbody></table>
+
+<!-- ============================================================== 9 -->
+<h2>Tema oscuro y enlaces con parámetros</h2>
+<p>El botón de la <b>luna/sol</b> (esquina superior derecha) cambia entre tema claro y oscuro; la aplicación recuerda tu elección. El tema oscuro es cómodo en salones con poca luz o con proyector.</p>
+<figure class="med"><img src="figuras/manual/m11_oscuro.png" alt="Tema oscuro"><figcaption>Figura 9. Tema oscuro.</figcaption></figure>
+<p>Puedes abrir la aplicación ya configurada añadiendo parámetros a la dirección. Es útil para dejar preparada una demostración:</p>
+<table>
+<caption>Tabla 6. Parámetros de la dirección</caption>
+<thead><tr><th style="width:18%">Parámetro</th><th>Significado</th><th style="width:30%">Ejemplo</th></tr></thead>
+<tbody>
+<tr><td><code>cancion</code></td><td>Canción de la base (<code>tema01</code> … <code>tema12</code>)</td><td><code>cancion=tema07</code></td></tr>
+<tr><td><code>inicio</code>, <code>dur</code></td><td>Inicio y duración del fragmento, en segundos</td><td><code>inicio=12&amp;dur=5</code></td></tr>
+<tr><td><code>snr</code></td><td>Ruido en dB, o <code>inf</code> para ninguno</td><td><code>snr=0</code> · <code>snr=inf</code></td></tr>
+<tr><td><code>auto</code></td><td><code>1</code> = reconocer al abrir</td><td><code>auto=1</code></td></tr>
+<tr><td><code>vista</code>, <code>cam</code></td><td>Vista <code>2d</code>; cámara <code>superior</code>, <code>lateral</code>, <code>frontal</code></td><td><code>vista=2d</code> · <code>cam=superior</code></td></tr>
+<tr><td><code>pares</code>, <code>giro</code>, <code>altura</code></td><td><code>pares=1</code> muestra los pares; <code>giro=1</code> gira solo; altura numérica</td><td><code>pares=1&amp;giro=1</code></td></tr>
+<tr><td><code>tema</code></td><td><code>claro</code> u <code>oscuro</code></td><td><code>tema=oscuro</code></td></tr>
+</tbody></table>
+<p>Ejemplo completo: <code>http://localhost:3000/?cancion=tema07&amp;inicio=12&amp;dur=5&amp;snr=5&amp;auto=1&amp;pares=1</code></p>
+
+<!-- ============================================================== 10 -->
+<h2>Solución de problemas</h2>
+<table>
+<caption>Tabla 7. Síntomas, causas y soluciones</caption>
+<thead><tr><th style="width:25%">Qué ves</th><th style="width:30%">Causa probable</th><th>Qué hacer</th></tr></thead>
+<tbody>
+<tr><td>«Node.js no está instalado»</td><td>Falta instalar Node.js.</td><td>Instala la versión <b>LTS</b> desde nodejs.org, reinicia el equipo o abre una ventana nueva y vuelve a ejecutar <b>iniciar.bat</b>.</td></tr>
+<tr><td>«No se pudieron instalar las dependencias»</td><td>Sin internet en la primera ejecución, o un proxy.</td><td>Conéctate a internet y repite. Solo hace falta esa vez.</td></tr>
+<tr><td>El navegador no se abre solo</td><td>Tu navegador predeterminado tardó o bloqueó la apertura.</td><td>Lee el mensaje <code>Listo: http://localhost:…</code> en la ventana negra y escribe esa dirección en el navegador.</td></tr>
+<tr><td>El puerto 3000 está ocupado</td><td>Otra aplicación (o una copia anterior) lo usa.</td><td><b>iniciar.bat</b> elige el siguiente libre y lo indica. A mano: <code>$env:PORT=3001; npm start</code> en PowerShell.</td></tr>
+<tr><td>Página en blanco, o botones que no responden</td><td>Hay un servidor viejo en ese puerto o el navegador guardó una versión antigua.</td><td>Cierra la ventana <i>«Servidor de la demo»</i>, vuelve a ejecutar <b>iniciar.bat</b> y recarga con <kbd>Ctrl</kbd>+<kbd>F5</kbd>.</td></tr>
+<tr><td>No se escucha el audio</td><td>Volumen bajo, salida de sonido incorrecta o pestaña silenciada.</td><td>Revisa el volumen de Windows y que la pestaña no tenga el altavoz tachado. Recarga con <kbd>Ctrl</kbd>+<kbd>F5</kbd> y prueba <b>▶ Canción completa</b>.</td></tr>
+<tr><td>«No se pudo acceder al micrófono»</td><td>Permiso denegado, otro programa usa el micrófono, o la página no es segura.</td><td>Pulsa el candado junto a la dirección y permite el micrófono. Usa <code>localhost</code> o la versión en línea (HTTPS). Cierra otros programas que lo usen.</td></tr>
+<tr><td>«No se pudo decodificar el audio»</td><td>Formato que el navegador no abre, o archivo que no es de audio.</td><td>Convierte el archivo a WAV o MP3 y repite.</td></tr>
+<tr><td>«El audio es demasiado corto» / «en silencio»</td><td>Menos de unos 0,25 s, o sin señal.</td><td>Usa un audio más largo (ideal 5 s o más) y con sonido.</td></tr>
+<tr><td>«Sin coincidencia fiable» con una canción que sí es de la base</td><td>Fragmento muy corto o con demasiado ruido; o, con micrófono, eco o volumen bajo.</td><td>Aumenta la duración a 5 s o más, baja el ruido o acerca el micrófono al parlante.</td></tr>
+<tr><td>La vista 3D no aparece (aviso de WebGL)</td><td>El navegador tiene WebGL o la aceleración por hardware desactivados.</td><td>Activa la aceleración por hardware en los ajustes del navegador y reinícialo. Mientras tanto, la vista <b>2D</b> funciona igual.</td></tr>
+<tr><td>Todo va lento o el 3D se entrecorta</td><td>Poca memoria libre o muchos programas abiertos.</td><td>Cierra programas pesados y otras pestañas. Si persiste, usa la vista 2D.</td></tr>
+<tr><td>La posición estimada parece incorrecta</td><td>La pieza repite frases y el fragmento coincide con otra aparición.</td><td>Es esperable; el texto del resultado lo advierte. El nombre de la canción sigue siendo correcto.</td></tr>
+<tr><td>La versión en línea tarda en la primera carga</td><td>El servicio estaba «dormido» y arranca al recibir la primera visita.</td><td>Espera unos segundos y vuelve a intentar; después responde rápido.</td></tr>
+</tbody></table>
+
+<!-- ============================================================== 11 -->
+<h2>Qué no hace (límites)</h2>
+<ul>
+<li><b>No reconoce música comercial.</b> Su base son {{n_can}} piezas sintéticas. Reconocer canciones reales exigiría una base enorme.</li>
+<li>Los resultados con música real, con voz, percusión y reverberación, <b>no serían iguales</b> a los de las pruebas.</li>
+<li>No es invariante a cambios de tempo ni de tono: si aceleras o cambias de tono la canción, deja de coincidir.</li>
+<li>El índice vive en la memoria del servidor; para millones de canciones haría falta una base de datos.</li>
+<li>El modo micrófono se verificó con un micrófono simulado; con uno físico, el resultado depende de la sala y de los parlantes.</li>
+</ul>
+
+<!-- ============================================================== 12 -->
+<h2>Guía rápida para exponer la demo</h2>
+<p>Un guion de unos 4 minutos que muestra todo lo importante:</p>
+<ol>
+<li><b>Abrir</b> la aplicación (iniciar.bat o la versión en línea) y, si hay proyector, activar el <b>tema oscuro</b>. <i>«Esto reconoce una canción a partir de un fragmento, como Shazam.»</i></li>
+<li>En «Fragmento», elegir la <b>Canción 07</b>, inicio 12 s, duración 5 s, ruido <b>0 dB</b>. Pulsar <b>▶ Escuchar fragmento</b> para que el público oiga el ruido. <i>«Esto es tan ruidoso como la música misma.»</i></li>
+<li>Pulsar <b>Reconocer</b> y comentar las etapas mientras se iluminan: señal, FFT, picos, hashes, votación.</li>
+<li>Mostrar el <b>espectrograma 3D</b>: girarlo con el ratón y activar <b>Girar</b>. <i>«Las crestas son las notas; la alfombra rugosa es el ruido.»</i></li>
+<li>Activar <b>Picos</b> y luego <b>Pares de hash</b> (o pulsar las etapas 3 y 4). <i>«Solo guardamos estos puntos fuertes; cada línea es un hash.»</i></li>
+<li>Pulsar <b>▶ Escuchar</b> para que el cabezal amarillo recorra el espectrograma.</li>
+<li>Señalar el <b>histograma</b>: <i>«Casi todos los votos caen en un mismo instante: esa es la canción.»</i> y el medidor frente al umbral de {{umbral}} votos.</li>
+<li>Subir ruido a <b>−10 dB</b> y reconocer de nuevo, para mostrar el límite. Terminar en la pestaña <b>Archivo</b> subiendo una canción ajena a la base y mostrando el <b>«Sin coincidencia fiable»</b>.</li>
+</ol>
+<div class="caja tip"><b>Antes de exponer:</b> cierra programas que consuman memoria, prueba el sonido y deja la ventana del servidor abierta. Si no tienes internet o el computador falla, abre la versión en línea desde otro dispositivo.</div>
+
+<!-- ============================================================== 13 -->
+<h2>Anexo: comandos, carpetas y glosario</h2>
+<h3>Comandos útiles</h3>
+<table>
+<thead><tr><th style="width:36%">Dónde y qué</th><th>Para qué sirve</th></tr></thead>
+<tbody>
+<tr><td><code>demo</code> › <code>npm start</code></td><td>Inicia el servidor en el puerto 3000.</td></tr>
+<tr><td><code>demo</code> › <code>npm test</code></td><td>Ejecuta las 13 pruebas automáticas (FFT, picos, reconocimiento, etc.).</td></tr>
+<tr><td><code>demo</code> › <code>npm run canciones</code></td><td>Regenera las {{n_can}} canciones sintéticas.</td></tr>
+<tr><td><code>demo</code> › <code>npm run experimentos</code></td><td>Repite los experimentos del informe (tarda cerca de un minuto).</td></tr>
+<tr><td><code>informe</code> › <code>npm run build</code></td><td>Genera <i>Informe_IEEE.pdf</i>.</td></tr>
+<tr><td><code>informe</code> › <code>npm run modelos</code></td><td>Genera <i>Modelos_Matematicos.pdf</i>.</td></tr>
+<tr><td><code>informe</code> › <code>npm run manual</code></td><td>Genera este manual.</td></tr>
+</tbody></table>
+<p>Cada vez que quieras generar un PDF por primera vez, ejecuta antes <code>npm install</code> dentro de la carpeta <code>informe</code>. Los PDF necesitan Microsoft Edge o Google Chrome instalados.</p>
+
+<h3>Carpetas</h3>
+<pre>actividad_reconocimiento_audio/
+├── README.md
+├── demo/                    la aplicación
+│   ├── iniciar.bat          arranque con doble clic
+│   ├── server.js            servidor y API
+│   ├── lib/                 FFT, picos, hashes, síntesis, colores
+│   ├── public/              pantalla (HTML, CSS, JS) y las canciones (audio/)
+│   └── test/                pruebas automáticas
+└── informe/                 documentos
+    ├── Informe_IEEE.pdf         informe de investigación
+    ├── Modelos_Matematicos.pdf  fórmulas usadas
+    └── Manual_de_Uso.pdf        este manual</pre>
+
+<h3>Glosario</h3>
+<dl>
+<dt>Espectrograma</dt><dd>Imagen que muestra qué frecuencias suenan y con qué fuerza en cada instante.</dd>
+<dt>FFT (Transformada rápida de Fourier)</dt><dd>Algoritmo que descompone un sonido en las frecuencias que lo forman, de manera muy eficiente.</dd>
+<dt>Pico</dt><dd>Punto del espectrograma más fuerte que todos sus vecinos; son los que forman la huella.</dd>
+<dt>Hash</dt><dd>Número de 24 bits que resume un par de picos (dos frecuencias y el tiempo que las separa).</dd>
+<dt>Votación / desplazamiento</dt><dd>Método de decisión: cada hash coincidente vota por una posición dentro de la canción; gana la que acumula más votos en la misma posición.</dd>
+<dt>SNR (relación señal-ruido)</dt><dd>Cuánto más fuerte es la música que el ruido, en decibelios. 0 dB: igual de fuertes; negativo: el ruido manda.</dd>
+<dt>Umbral</dt><dd>Número mínimo de votos para aceptar un resultado ({{umbral}} en esta aplicación).</dd>
+<dt>Canción sintética</dt><dd>Pieza generada por código (melodía, arpegio y bajo), sin derechos de autor.</dd>
+</dl>
+<p style="margin-top:14pt;font-size:9.5pt;color:#44506a">Documentos relacionados: <i>Informe_IEEE.pdf</i> (investigación y resultados) y <i>Modelos_Matematicos.pdf</i> (todas las fórmulas con sus parámetros).</p>
+
+</body>
+</html>

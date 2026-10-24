@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Reconocimiento de audio musical mediante la Transformada de Fourier</title>
+<link rel="stylesheet" href="node_modules/katex/dist/katex.min.css">
+<style>
+  /* Formato tipo IEEE: Letter, dos columnas de 3.5 in, separación 0.25 in, Times 10 pt */
+  @page { size: 8.5in 11in; margin: 0.75in 0.625in 1in 0.625in; }
+  html { font-family: "Times New Roman", Times, serif; font-size: 10pt; line-height: 1.17; color: #000; }
+  body { margin: 0; counter-reset: sec fig tab; }
+  .titulo { text-align: center; font-size: 24pt; line-height: 1.1; margin: 0 0 12pt; font-weight: normal; }
+  .autores { text-align: center; font-size: 11pt; margin-bottom: 14pt; line-height: 1.25; }
+  .autores .nombre { font-size: 11pt; }
+  .autores .afil { font-size: 9.5pt; font-style: italic; }
+  .cols { column-count: 2; column-gap: 0.25in; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+  p { margin: 0 0 6pt; text-indent: 0.2in; }
+  p.sin { text-indent: 0; }
+  .resumen { font-weight: bold; font-size: 9pt; line-height: 1.15; margin-bottom: 6pt; }
+  .resumen p { text-indent: 0; margin-bottom: 4pt; }
+  .resumen i.h { font-style: italic; }
+  h2 { font-size: 10pt; font-weight: normal; text-transform: uppercase; text-align: center; margin: 10pt 0 4pt; counter-increment: sec; counter-reset: sub; break-after: avoid; }
+  h2.num::before { content: counter(sec, upper-roman) ".  "; }
+  h2.nonum { counter-increment: none; }
+  h3 { font-size: 10pt; font-weight: normal; font-style: italic; margin: 7pt 0 3pt; counter-increment: sub; break-after: avoid; text-align: left; }
+  h3::before { content: counter(sub, upper-alpha) ".  "; }
+  figure { margin: 6pt 0 8pt; break-inside: avoid; text-align: center; }
+  figure svg, figure img { width: 100%; height: auto; display: block; }
+  figcaption, .cap { font-size: 8pt; line-height: 1.15; margin-top: 3pt; text-align: justify; text-indent: 0; }
+  figure.ancho { column-span: all; margin: 8pt 0 10pt; }
+  figure.ancho img { width: 80%; margin: 0 auto; }
+  .tabla { margin: 6pt 0 8pt; break-inside: avoid; }
+  .tabla .cap { text-align: center; text-transform: uppercase; font-size: 8pt; margin: 0 0 3pt; }
+  .tabla .cap span.t { display: block; text-transform: none; }
+  table { border-collapse: collapse; width: 100%; font-size: 8pt; }
+  th, td { padding: 1.5pt 3pt; text-align: right; border: 0; line-height: 1.12; }
+  th { border-top: 0.8pt solid #000; border-bottom: 0.5pt solid #000; font-weight: normal; font-style: italic; text-align: right; }
+  td:first-child, th:first-child { text-align: left; }
+  tbody tr:last-child td { border-bottom: 0.8pt solid #000; }
+  table.param td, table.param th { text-align: left; }
+  table.param td:last-child { text-align: left; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 8.5pt; }
+  .eq { display: flex; align-items: center; margin: 4pt 0; break-inside: avoid; }
+  .eqc { flex: 1; text-align: center; }
+  .eqn { flex: none; width: 0.3in; text-align: right; }
+  .eq .katex-display { margin: 0; }
+  .katex { font-size: 1.04em; }
+  ol.refs { list-style: none; margin: 0; padding: 0; font-size: 8pt; line-height: 1.15; text-align: left; hyphens: manual; }
+  ol.refs li { padding-left: 0.3in; text-indent: -0.3in; margin-bottom: 2.5pt; word-break: break-word; }
+  ol.refs .rn { display: inline-block; width: 0.3in; text-indent: 0; }
+  ul.lista { margin: 0 0 6pt 0; padding-left: 0.22in; }
+  ul.lista li { margin-bottom: 2pt; }
+</style>
+</head>
+<body>
+
+<h1 class="titulo">Reconocimiento de audio musical mediante la Transformada de Fourier: huella acústica y demo web full stack</h1>
+<div class="autores">
+  <div class="nombre">Andrés Felipe Verbel Pacheco</div>
+  <div class="afil">Curso de Desarrollo Web Full Stack, CUC</div>
+  <div class="afil">Octubre de 2026</div>
+</div>
+
+<div class="cols">
+
+<div class="resumen">
+<p><i class="h">Resumen</i>—Este trabajo investiga cómo se reconoce una canción a partir de un fragmento de audio mediante la Transformada de Fourier. Se presentan la transformada discreta (DFT), el algoritmo FFT de Cooley y Tukey, la ventana de Hann y el espectrograma, y sobre ellos un sistema de huella acústica basado en una «constelación» de picos: se detectan máximos locales del espectrograma, se combinan en pares para formar hashes de 24 bits y la canción se identifica por votación del desplazamiento temporal. El sistema se implementó como una aplicación web full stack (Node.js, Express y Web Audio API) con un espectrograma 3D interactivo, y se evaluó con una base de {{n_can}} canciones sintéticas de 30 s. Con fragmentos de 5 s, la canción correcta fue la primera candidata en {{acc_5_m5}} % de los casos con ruido blanco de &minus;5 dB de relación señal-ruido y en {{acc_5_m10}} % con &minus;10 dB; ninguna de {{fp_n}} consultas con canciones ajenas a la base superó el umbral de decisión. Para N = 4096, la FFT fue {{acel_4096}} veces más rápida que la DFT directa.</p>
+<p><i class="h">Palabras clave</i>—Transformada de Fourier, FFT, espectrograma, huella acústica, reconocimiento de música, hashing, desarrollo web full stack.</p>
+</div>
+
+<h2 class="num">Introducción</h2>
+<p>Identificar una canción a partir de unos segundos de audio, grabados con un micrófono y en presencia de ruido, es el problema que resuelven servicios como Shazam [[cite:wang]]. La dificultad es doble: la señal no se puede comparar muestra a muestra con una grabación almacenada, porque el fragmento empieza en un instante arbitrario y está degradado; y la búsqueda debe ser rápida en bases de millones de piezas. La solución habitual consiste en extraer de la señal una <i>huella acústica</i> compacta y robusta [[cite:haitsma]], [[cite:cano]], y buscarla en un índice.</p>
+<p>La Transformada de Fourier es la herramienta que permite pasar del dominio del tiempo al de la frecuencia, donde una nota musical se manifiesta como un conjunto de picos estables. Este informe responde a la actividad de investigar el funcionamiento del reconocimiento de audio (música) y el uso de la transformada de Fourier. Sus aportes son: (i) la presentación de los modelos matemáticos (DFT, FFT, ventanas, espectrograma, hashing y votación); (ii) una implementación en JavaScript con pruebas automáticas; (iii) una evaluación experimental de la velocidad de la FFT, la exactitud frente al ruido y los falsos positivos; y (iv) una demo web full stack con captura de audio, espectrograma interactivo y reconocimiento.</p>
+
+<h2 class="num">Marco teórico</h2>
+<h3>Muestreo</h3>
+<p>Una señal de audio continua $x(t)$ se representa por muestras $x[n]=x(n/f_s)$. Según el teorema del muestreo [[cite:shannon]], solo se pueden representar sin ambigüedad las frecuencias menores que $f_s/2$. Aquí se trabaja con $f_s={{fs}}$ Hz (banda de 0 a 4 kHz), suficiente para la melodía y los primeros armónicos y barata de procesar; cualquier audio de entrada se remuestrea a esa frecuencia.</p>
+
+<h3>Transformada discreta de Fourier</h3>
+<p>Para un bloque de $N$ muestras, la DFT calcula la amplitud y fase de $N$ componentes sinusoidales [[cite:oppenheim]]:</p>
+[[eq:dft]]X[k]=\sum_{n=0}^{N-1}x[n]\,e^{-j2\pi kn/N},\qquad k=0,\dots,N-1.[[/eq]]
+<p class="sin">El índice $k$ corresponde a la frecuencia $f_k=k\,f_s/N$, por lo que la resolución es $\Delta f=f_s/N$. Como $x[n]$ es real, $X[N-k]=X[k]^{*}$ y basta con los $N/2$ primeros coeficientes. Evaluar [[ref:dft]] directamente cuesta $\Theta(N^2)$ operaciones.</p>
+
+<h3>Transformada rápida de Fourier</h3>
+<p>El algoritmo de Cooley y Tukey [[cite:cooley]] separa las muestras pares e impares. Si $E[k]$ y $O[k]$ son las DFT de tamaño $N/2$ de cada grupo y $W_N=e^{-j2\pi/N}$, entonces</p>
+[[eq:fft]]\begin{aligned}X[k]&=E[k]+W_N^{k}\,O[k],\\ X[k+N/2]&=E[k]-W_N^{k}\,O[k],\end{aligned}\quad 0\le k<N/2.[[/eq]]
+<p class="sin">Aplicada recursivamente (con $N$ potencia de 2), la recurrencia $T(N)=2T(N/2)+\Theta(N)$ da un costo $\Theta(N\log_2 N)$. La implementación usada es iterativa, en el lugar, con reordenamiento por inversión de bits y factores de giro precalculados.</p>
+
+<h3>Ventana, espectrograma y resolución</h3>
+<p>Para analizar música, cuyo contenido cambia en el tiempo, se divide la señal en bloques solapados, cada uno multiplicado por una ventana que atenúa los bordes y reduce la fuga espectral [[cite:harris]]. Se usa la ventana de Hann y la transformada de tiempo corto (STFT) con salto de $H$ muestras:</p>
+[[eq:stft]]\begin{aligned}w[n]&=\tfrac12-\tfrac12\cos\tfrac{2\pi n}{N},\quad 0\le n<N,\\ X[m,k]&=\sum_{n=0}^{N-1}w[n]\,x[mH+n]\,e^{-j2\pi kn/N},\\ S[m,k]&=10\log_{10}|X[m,k]|^{2}.\end{aligned}[[/eq]]
+<p class="sin">La matriz $S[m,k]$, en dB, es el <i>espectrograma</i>. Con $N={{N}}$, $H={{hop}}$ y $f_s={{fs}}$ Hz, cada ventana dura {{ventana_ms}} ms, el salto es de {{hop_ms}} ms y la resolución en frecuencia es $\Delta f={{df}}$ Hz por bin. Una ventana más larga mejora $\Delta f$ pero empeora la resolución temporal: ambas no pueden ser arbitrariamente pequeñas a la vez [[cite:gabor]].</p>
+
+<h3>Estructura de una nota musical</h3>
+<p>En la escala temperada, la nota MIDI $n$ tiene frecuencia fundamental $f_0=440\cdot2^{(n-69)/12}$ Hz. Un instrumento produce además armónicos, de modo que una nota es una suma $x(t)=\sum_{h}a_h\sin(2\pi h f_0 t)$, que en el espectrograma aparece como líneas horizontales en $f_0,2f_0,3f_0,\dots$ que duran lo que la nota. Esas líneas son las estructuras que la huella aprovecha.</p>
+
+<h2 class="num">Modelo de huella acústica</h2>
+<p>El método sigue el enfoque de constelación de picos de Wang [[cite:wang]]. La Fig. 1 resume la tubería: la señal se convierte en espectrograma; de él se extraen picos; los picos se combinan en pares que producen hashes; y la canción se determina contando coincidencias consistentes en el índice.</p>
+<figure>
+<svg viewBox="0 0 350 150" xmlns="http://www.w3.org/2000/svg" font-family="'Times New Roman',serif" font-size="9.5">
+  <defs><marker id="fl" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#222"/></marker></defs>
+  <g stroke="#222" fill="#eef3fb"><rect x="4" y="8" width="96" height="46"/><rect x="127" y="8" width="96" height="46"/><rect x="250" y="8" width="96" height="46"/></g>
+  <g stroke="#222" fill="#eef7ee"><rect x="250" y="92" width="96" height="46"/><rect x="127" y="92" width="96" height="46"/></g>
+  <g stroke="#222" fill="#fbf1ee"><rect x="4" y="92" width="96" height="46"/></g>
+  <g text-anchor="middle">
+    <text x="52" y="26" font-weight="bold">1. Señal</text><text x="52" y="38">remuestreo a 8 kHz</text><text x="52" y="49" font-size="8.5">(navegador)</text>
+    <text x="175" y="26" font-weight="bold">2. Ventana + FFT</text><text x="175" y="38">Hann, <tspan font-style="italic">N</tspan> = 1024</text><text x="175" y="49" font-size="8.5">(navegador)</text>
+    <text x="298" y="26" font-weight="bold">3. Espectrograma</text><text x="298" y="38"><tspan font-style="italic">S</tspan>[<tspan font-style="italic">m</tspan>,<tspan font-style="italic">k</tspan>] en dB</text><text x="298" y="49" font-size="8.5">(navegador)</text>
+    <text x="298" y="110" font-weight="bold">4. Picos</text><text x="298" y="122">máximos locales</text><text x="298" y="133" font-size="8.5">(navegador)</text>
+    <text x="175" y="110" font-weight="bold">5. Pares y hashes</text><text x="175" y="122">(<tspan font-style="italic">f</tspan><tspan font-size="7" dy="2">1</tspan><tspan dy="-2">,</tspan><tspan font-style="italic">f</tspan><tspan font-size="7" dy="2">2</tspan><tspan dy="-2">,&#916;</tspan><tspan font-style="italic">t</tspan>) 24 bits</text><text x="175" y="133" font-size="8.5">(navegador)</text>
+    <text x="52" y="110" font-weight="bold">6. Índice y votos</text><text x="52" y="122">histograma de &#916;</text><text x="52" y="133" font-size="8.5">(servidor Express)</text>
+  </g>
+  <g stroke="#222" fill="none" marker-end="url(#fl)"><path d="M100,31 H127"/><path d="M223,31 H250"/><path d="M298,54 V92"/><path d="M250,115 H223"/><path d="M127,115 H100"/></g>
+</svg>
+<figcaption>Fig. 1. Tubería de reconocimiento. Las etapas 1–5 se ejecutan en el navegador y solo viajan los hashes; la etapa 6 se ejecuta en el servidor.</figcaption>
+</figure>
+
+<h3>Detección de picos</h3>
+<p>Un punto $(m,k)$ del espectrograma es un pico si es el máximo de su vecindad de $\pm\Delta_t$ ventanas y $\pm\Delta_f$ bins y, además, está a menos de $\gamma$ dB del máximo global $S_{\max}$:</p>
+[[eq:pico]]\begin{aligned}(m,k)\ \text{es pico}\iff{}&S[m,k]=\max_{|m'-m|\le\Delta_t,\,|k'-k|\le\Delta_f}S[m',k']\\ &\wedge\ S[m,k]>S_{\max}-\gamma.\end{aligned}[[/eq]]
+<p class="sin">El criterio de máximo local reparte los picos de manera uniforme en el plano tiempo-frecuencia y es insensible a la ganancia global, pues compara dB entre sí. El margen $\gamma$ descarta lo que queda por debajo del ruido (Sección V-E). La Fig. 2 muestra el resultado sobre {{seg_ej}} s de una canción de la base: {{picos_ej}} picos ({{picos_s}} por segundo).</p>
+<figure>
+{{fig_espectro}}
+<figcaption>Fig. 2. Espectrograma (0–2 kHz) de un fragmento del Tema 04 y su constelación de picos. Las líneas horizontales son las notas y sus armónicos.</figcaption>
+</figure>
+
+<h3>Pares de picos y hashes</h3>
+<p>Un solo pico no es suficientemente selectivo. Por eso cada pico <i>ancla</i> se une con los siguientes $F={{fan}}$ picos de una zona objetivo (hasta ${{dtmax}}$ ventanas después, Fig. 3) y cada par define un hash de 24 bits con las frecuencias de ambos picos y su separación en el tiempo:</p>
+[[eq:hash]]h=(k_1\cdot512+k_2)\cdot64+\Delta m,\qquad \Delta m=m_2-m_1\in[1,63].[[/eq]]
+<p class="sin">Ese hash no depende del instante absoluto del par, solo de la diferencia $\Delta m$, y por eso sirve para fragmentos que empiezan en cualquier punto. La fuente de selectividad es combinatoria: dos frecuencias (9 bits cada una) y un intervalo (6 bits) aportan 24 bits frente a los 9 de un pico aislado.</p>
+<figure>
+{{fig_pares}}
+<figcaption>Fig. 3. Pares ancla-objetivo. Cada línea azul es un par que genera un hash; la zona sombreada es la zona objetivo.</figcaption>
+</figure>
+
+<h3>Índice invertido y votación</h3>
+<p>Durante el registro, cada hash de cada canción se guarda con su identificador y su instante $m_{\mathrm{bd}}$. En la consulta, cada hash $(h,m_{\mathrm q})$ recupera las entradas con el mismo $h$ y vota por el desplazamiento $\delta=m_{\mathrm{bd}}-m_{\mathrm q}$. Si el fragmento pertenece a la canción, muchos pares coinciden con el <i>mismo</i> $\delta$ (la posición del fragmento); las coincidencias fortuitas se reparten entre desplazamientos distintos:</p>
+[[eq:voto]]\mathrm{puntaje}_s=\max_{\delta}\,[c_s(\delta-1)+c_s(\delta)+c_s(\delta+1)],[[/eq]]
+<p class="sin">donde $c_s(\delta)$ es el número de coincidencias de la canción $s$ con desplazamiento $\delta$. Se suman tres bins consecutivos porque el fragmento empieza en una muestra arbitraria y los instantes se cuantizan en pasos de {{hop_ms}} ms, lo que desplaza algunos picos una ventana. La canción ganadora es $\hat s=\arg\max_s\mathrm{puntaje}_s$ y se acepta solo si el puntaje alcanza un umbral $\tau={{umbral}}$; además, $\delta H/f_s$ estima la posición del fragmento en la canción.</p>
+
+<h3>Ruido y colisiones</h3>
+<p>Para evaluar la robustez se añade ruido blanco gaussiano de varianza $\sigma^2$ fijada por la relación señal-ruido respecto a la potencia $P_x$ del fragmento:</p>
+[[eq:snr]]\mathrm{SNR_{dB}}=10\log_{10}\frac{P_x}{\sigma^{2}}\ \Rightarrow\ \sigma^{2}=\frac{P_x}{10^{\mathrm{SNR_{dB}}/10}}.[[/eq]]
+<p class="sin">Si los $U$ hashes distintos del índice estuvieran repartidos uniformemente en $2^{24}$ valores, un hash cualquiera coincidiría por azar con probabilidad $p\approx U/2^{24}$. En música real y en tonos sintéticos la distribución no es uniforme, porque las notas ocupan pocas frecuencias y los ritmos pocos intervalos. En la Sección V-D se mide ese efecto.</p>
+
+<h2 class="num">Implementación full stack</h2>
+<h3>Arquitectura</h3>
+<p>Como en los servicios comerciales, el cálculo costoso se hace en el cliente y el servidor solo busca. El <b>frontend</b> (HTML, CSS y JavaScript) obtiene el audio de tres fuentes: un fragmento de la base con ruido ajustable, un archivo del usuario o el micrófono, y lo decodifica y remuestrea a 8 kHz con la Web Audio API [[cite:webaudio]]. Luego calcula el espectrograma, los picos y los hashes con el módulo <code>huella.js</code> y dibuja el espectrograma en 3D con Three.js [[cite:threejs]] (superficie con la potencia como altura y color, picos, pares de hash y cabezal de reproducción) y en 2D sobre un <code>canvas</code>. El <b>backend</b> es una API REST en Node.js y Express [[cite:express]] que, al iniciar, lee las canciones, calcula sus huellas y construye el índice en memoria; recibe los hashes, valida las entradas (enteros de 24 bits, límite de tamaño) y responde con los candidatos, la posición estimada y el histograma de votos. El mismo módulo <code>huella.js</code> corre en Node y en el navegador, de modo que cliente y servidor calculan huellas idénticas.</p>
+
+<h3>API y parámetros</h3>
+<p>La API expone <code>GET /api/canciones</code>, <code>GET /api/estado</code> y <code>POST /api/reconocer</code>, que recibe <code>{"huellas": [[hash, tiempo], …]}</code>. La Tabla I resume los parámetros de la huella.</p>
+<div class="tabla">
+<div class="cap">Tabla I<span class="t">Parámetros de la huella acústica</span></div>
+<table class="param"><thead><tr><th>Parámetro</th><th>Valor</th></tr></thead><tbody>
+<tr><td>Frecuencia de muestreo <i>f<sub>s</sub></i></td><td>{{fs}} Hz</td></tr>
+<tr><td>Ventana / FFT (<i>N</i>), salto (<i>H</i>)</td><td>{{N}} / {{hop}} muestras</td></tr>
+<tr><td>Vecindad de pico (&Delta;<sub><i>t</i></sub>, &Delta;<sub><i>f</i></sub>)</td><td>&plusmn;{{vect}} ventanas, &plusmn;{{vecf}} bins</td></tr>
+<tr><td>Margen bajo el máximo global (&gamma;)</td><td>{{marg}} dB</td></tr>
+<tr><td>Pares por ancla (<i>F</i>), &Delta;<i>m</i> máximo</td><td>{{fan}}, {{dtmax}} ventanas</td></tr>
+<tr><td>Umbral de decisión (&tau;)</td><td>{{umbral}} votos</td></tr>
+</tbody></table>
+</div>
+
+<h3>Base de canciones de prueba</h3>
+<p>Para no usar material con derechos de autor, la base contiene {{n_can}} piezas sintéticas de 30 s generadas por código con semillas fijas: una melodía en una escala (mayor, menor, pentatónica o dórica) con estructura de frases repetidas A–B–A–C, un arpegio y un bajo, cada nota con cuatro armónicos y envolvente de ataque y decaimiento. Cada pieza tiene tonalidad, tempo (80–139 bpm), timbre y afinación (&plusmn;50 centésimas) propios; esta última variación se añadió porque, sin ella, piezas distintas compartían frecuencias exactas y generaban coincidencias fortuitas poco realistas.</p>
+
+<h3>Verificación</h3>
+<p>El módulo se verificó con 13 pruebas automáticas (<code>node:test</code>): la FFT coincide con la DFT directa; una senoidal en el bin $k$ produce picos en $k$ y $N-k$; se cumple el teorema de Parseval; la ventana de Hann toma los valores esperados; el pico del espectrograma de una nota de 440 Hz cae en el bin correcto; los hashes caben en 24 bits; se reconocen fragmentos ruidosos de 5 s; una canción ajena no supera el umbral; y la posición estimada de un fragmento en una pieza sin repeticiones tiene error menor que 0,1 s. Todas pasan.</p>
+
+<h2 class="num">Resultados</h2>
+<h3>FFT frente a DFT directa</h3>
+<p>La Tabla II y la Fig. 4 comparan el tiempo de una transformada de $N$ puntos con la FFT implementada y con la DFT directa (ambas en Node.js, entrada compleja aleatoria). El error máximo entre las dos es menor que {{err_fft}}, es decir, del orden del redondeo de doble precisión. La ventaja de la FFT crece con $N$, como predice $N/\log_2 N$, y llega a {{acel_4096}}&times; para $N=4096$. Con la ventana usada ($N={{N}}$), una FFT toma unas decenas de microsegundos.</p>
+<div class="tabla">
+<div class="cap">Tabla II<span class="t">Tiempo de la FFT y la DFT directa</span></div>
+{{tabla_fft}}
+</div>
+<figure>
+{{fig_fft}}
+<figcaption>Fig. 4. Tiempo por transformada en función de <i>N</i> (escala log-log).</figcaption>
+</figure>
+
+<h3>Votación por desplazamiento</h3>
+<p>La Fig. 5 muestra el histograma de votos para un fragmento de 5 s del Tema {{hist_id}} con ruido de 5 dB. La canción correcta acumula {{hist_puntaje}} votos en un único desplazamiento (el instante real del fragmento), mientras que la mejor canción rival no pasa de {{hist_rival}}. Los picos menores de la canción correcta corresponden a otras apariciones de la misma frase musical, que se repite exactamente en la pieza; por eso, en piezas con repeticiones, la posición estimada es ambigua.</p>
+<figure>
+{{fig_hist}}
+<figcaption>Fig. 5. Histograma de desplazamientos para una consulta de 5 s con SNR de 5 dB.</figcaption>
+</figure>
+
+<h3>Exactitud frente al ruido y a la duración</h3>
+<p>Se evaluó el sistema con {{n_can}} canciones, 5 fragmentos aleatorios por canción y condición (60 consultas por celda), con duraciones de 2 a 10 s y SNR entre &infin; (sin ruido) y &minus;15 dB. La Tabla III muestra, para cada condición, el porcentaje en que la canción correcta fue la primera candidata (top-1) y el porcentaje en que, además, se superó el umbral; la Fig. 6 grafica el top-1. Con 5 s o más se alcanza 100 % de top-1 hasta &minus;5 dB; con 5 s, el top-1 baja a {{acc_5_m10}} % con &minus;10 dB y a {{acc_5_m15}} % con &minus;15 dB, y con 10 s a {{acc_10_m10}} % y {{acc_10_m15}} %. Los fragmentos de 2 s se identifican ({{acc_2_inf}} % sin ruido) pero su puntaje es bajo, de modo que solo {{ace_2_inf}} % supera el umbral; con 3 s ya lo supera {{ace_3_inf}} %. El puntaje mediano sin ruido es de {{pm_5_inf}} votos para 5 s y {{pm_10_inf}} para 10 s: crece con la duración, pues hay más pares.</p>
+<div class="tabla">
+<div class="cap">Tabla III<span class="t">Top-1 / aceptadas (%) según SNR (dB) y duración</span></div>
+{{tabla_exactitud}}
+</div>
+<figure>
+{{fig_exactitud}}
+<figcaption>Fig. 6. Porcentaje de aciertos (top-1) frente a la relación señal-ruido.</figcaption>
+</figure>
+
+<h3>Falsos positivos</h3>
+<p>Se consultó la base con fragmentos de {{n_can}} canciones <i>no</i> incluidas, en seis condiciones (Tabla IV). De {{fp_n}} consultas hubo {{fp_tot}} falsos positivos; el puntaje máximo de una canción ajena fue {{fp_max}} votos, por debajo del umbral $\tau={{umbral}}$ (que se fijó en el doble de ese máximo). Aun así, {{azar_pct}} % de los hashes de una canción ajena existen en el índice, {{ratio_azar}} veces más que el {{ocup_pct}} % que daría una distribución uniforme, lo que confirma la no uniformidad descrita en la Sección III: la decisión no se puede basar en que «haya coincidencias», sino en que se concentren en un desplazamiento.</p>
+<div class="tabla">
+<div class="cap">Tabla IV<span class="t">Consultas con canciones ajenas a la base</span></div>
+{{tabla_fp}}
+</div>
+
+<h3>Sensibilidad al margen de picos</h3>
+<p>El parámetro $\gamma$ resultó decisivo (Tabla V). Con márgenes grandes ({{marg_alto}} dB) se conservan muchos picos débiles, que el ruido reemplaza o desplaza, y el top-1 a &minus;5 dB baja a {{top_alto}} %, además de aumentar el puntaje de canciones ajenas a {{ajeno_alto}}. Con márgenes pequeños, la constelación contiene solo los picos más fuertes, que sobreviven al ruido y producen menos hashes ({{hps}} por segundo con $\gamma={{marg}}$ dB). La elección se hizo con canciones sintéticas, cuyas notas tienen una amplitud parecida; música real, con gran dinámica, requeriría un umbral adaptativo por zonas en lugar de uno global.</p>
+<div class="tabla">
+<div class="cap">Tabla V<span class="t">Efecto del margen &gamma; (fragmentos de 5 s)</span></div>
+{{tabla_margen}}
+</div>
+
+<h3>Costo y demo funcional</h3>
+<p>Calcular la huella de un fragmento de 5 s toma unos {{huella_ms}} ms en el cliente y la búsqueda en el servidor {{busq_ms}} ms, con {{huellas_tot}} huellas ({{huellas_uni}} hashes distintos) de {{n_can}} canciones; construir el índice al iniciar el servidor tarda {{const_ms}} ms. La búsqueda recorre solo las listas de los hashes de la consulta, por lo que crece con el número de consultas y la longitud media de las listas ({{entradas_hit}} entradas por hash coincidente aquí), no con el número de canciones. La Fig. 7 muestra la interfaz: las cinco etapas del algoritmo se animan durante el reconocimiento y pueden consultarse una a una, el espectrograma 3D se puede girar y acercar, y hay modo claro y oscuro.</p>
+
+<h2 class="num">Discusión y limitaciones</h2>
+<ul class="lista">
+<li>La base es sintética y pequeña ({{n_can}} piezas). Música real tiene voz, percusión, reverberación y compresión; los resultados absolutos no son extrapolables a un servicio comercial.</li>
+<li>El método no es invariante a cambios de tempo ni de tono, que alteran $\Delta m$ y $k$; tampoco se evaluó ruido no blanco ni distorsión de altavoz y micrófono.</li>
+<li>Los umbrales ($\gamma$, $\tau$) se ajustaron con las mismas familias de piezas; deberían recalibrarse con material nuevo.</li>
+<li>La captura con micrófono depende del navegador y de los permisos del usuario; se implementó, pero la evaluación cuantitativa se hizo con ruido sintético.</li>
+<li>El índice vive en memoria. Para millones de canciones se necesitaría una base de datos con índice sobre el hash y particionado.</li>
+</ul>
+
+<h2 class="num">Conclusiones</h2>
+<p>La Transformada de Fourier convierte un fragmento de audio en un espectrograma donde las notas son estructuras estables, y a partir de ahí se puede construir una huella robusta: picos locales, pares de picos, hashes e histograma de desplazamientos. La FFT hace práctico el cálculo, con una aceleración de {{acel_4096}} veces sobre la DFT directa para $N=4096$. En las pruebas, fragmentos de 5 s se identificaron en {{acc_5_m5}} % de los casos con ruido de &minus;5 dB y ninguna canción ajena fue aceptada. La demo full stack integra todo el proceso, con el cálculo pesado en el navegador y la búsqueda en el servidor.</p>
+<p>Como trabajo futuro se propone evaluar con música real y con grabaciones de micrófono, incorporar un umbral de picos adaptativo, estudiar la invariancia a cambios de tempo y tono, y almacenar el índice en una base de datos persistente.</p>
+
+<figure class="ancho">
+<img src="figuras/demo.png" alt="Captura de la demo web">
+<figcaption>Fig. 7. Demo web: fragmento del Tema 07 con ruido de 5 dB. Espectrograma 3D con picos y pares de hash, resultado con medidor de confianza, forma de onda e histograma de desplazamientos.</figcaption>
+</figure>
+
+<h2 class="nonum">Referencias</h2>
+<ol class="refs">
+[[referencias]]
+</ol>
+
+</div>
+</body>
+</html>

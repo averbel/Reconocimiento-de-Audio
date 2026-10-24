@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Reconocimiento de audio</title>
+  <defs>
+    <linearGradient id="fondo" x1="6" y1="2" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4a7bff"/>
+      <stop offset="0.5" stop-color="#1f3fc4"/>
+      <stop offset="1" stop-color="#081650"/>
+    </linearGradient>
+    <linearGradient id="brillo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="onda" x1="4" y1="0" x2="60" y2="0" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#bfe0ff"/>
+    </linearGradient>
+    <filter id="resplandor" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="1.6"/>
+    </filter>
+  </defs>
+
+  <rect width="64" height="64" rx="15" fill="url(#fondo)"/>
+  <path d="M0 15A15 15 0 0 1 15 0h34a15 15 0 0 1 15 15v13C46 37 18 37 0 28z" fill="url(#brillo)"/>
+  <rect x="0.75" y="0.75" width="62.5" height="62.5" rx="14.25" fill="none" stroke="#fff" stroke-opacity="0.22" stroke-width="1.5"/>
+
+  <!-- onda: resplandor y trazo principal -->
+  <path d="M4 32h6l6-18 8 36 8-28 6 16 6-10 4 4h12" fill="none" stroke="#7fb0ff" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" filter="url(#resplandor)"/>
+  <path d="M4 32h6l6-18 8 36 8-28 6 16 6-10 4 4h12" fill="none" stroke="url(#onda)" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- picos de la «constelación» -->
+  <circle cx="16" cy="14" r="4" fill="#ffd23f"/>
+  <circle cx="16" cy="14" r="4" fill="none" stroke="#fff" stroke-opacity="0.85" stroke-width="1.2"/>
+  <circle cx="32" cy="22" r="2.6" fill="#ffd23f"/>
+</svg>
